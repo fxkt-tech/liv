@@ -27,7 +27,7 @@ ffmpeg
 -y
 -t 5
 -i in.mp4 -i logo.png
--filter_complex '[0]delogo=1490:40:400:100[p1];[p1]split=2[p1_hd][p1_sd];[p1_hd]scale=-1:720[p2_hd];[p2_hd][1]overlay=W-w-10:10[p_hd];[p1_sd]scale=-1:540[p2_sd];[p2_sd][1]overlay=W-w-10:10[p_sd]'
+-filter_complex '[0]delogo=1490:40:400:100[p1];[p1]split=2[p1_hd][p1_sd];[p1_hd]scale=trunc(oh*a/2)*2:720[p2_hd];[p2_hd][1]overlay=W-w-10:10[p_hd];[p1_sd]scale=-1:540[p2_sd];[p2_sd][1]overlay=W-w-10:10[p_sd]'
 
 -map '[p_hd]'
 -map 0:a
@@ -40,4 +40,8 @@ ffmpeg
 out_hd.mp4
 
 -map '[p_sd]' -map 0:a -metadata comment=fu789sg -c:v libwz264 -c:a copy -threads 4 -max_muxing_queue_size 4086 -movflags faststart out_sd.mp4
+
+trunc(oh*a/2)*2:720
+720:trunc(ow/a/2)*2
 ```
+
