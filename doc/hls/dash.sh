@@ -1,0 +1,12 @@
+ffmpeg \
+-hide_banner \
+-y \
+-threads 0 \
+-i video.mp4 \
+-filter_complex 'split=2[s0][s1];[s0]scale=480:-2[480s];[s1]scale=360:-2[360s]' \
+-map '[480s]' -c:v:0 libx264 -crf 25 -preset veryslow \
+-map '[360s]' -c:v:1 libx264 -crf 27 -preset veryslow \
+-map a -c:a:0 aac -ar:a:0 22050 \
+-map a -c:a:1 aac -ar:a:1 44100 \
+-g 150 -sc_threshold 0 -b_strategy 0 -min_seg_duration 5000 -use_timeline 0 -use_template 1 -single_file  1 -window_size 5 -adaptation_sets "id=0,streams=v id=1,streams=a" \
+-f dash OUTPUT.mpd

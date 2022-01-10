@@ -32,7 +32,7 @@ func TestFFmpeg(t *testing.T) {
 		output.New(
 			output.SetMap("xx720"),
 			output.SetMap("0:a"),
-			output.SetMetadata("comment=yilan888"),
+			output.SetMetadata("comment", "yilan888"),
 			output.SetFile("out720.mp4"),
 		),
 	)

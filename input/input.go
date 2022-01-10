@@ -7,10 +7,6 @@ import (
 
 // Input is common input info.
 type Input struct {
-	// i   string   // i is input file.
-	// ss  int64    // ss is starttime.
-	// t   int64    // t is duration.
-	// ext []string // extra params.
 	opt *option
 }
 
@@ -26,10 +22,10 @@ func New(opts ...OptionFunc) *Input {
 
 func (i *Input) Params() (params []string) {
 	if i.opt.ss != 0 {
-		params = append(params, "-ss", strconv.FormatInt(i.opt.ss, 10))
+		params = append(params, "-ss", strconv.FormatFloat(i.opt.ss, 'f', -1, 64))
 	}
 	if i.opt.t != 0 {
-		params = append(params, "-t", strconv.FormatInt(i.opt.t, 10))
+		params = append(params, "-t", strconv.FormatFloat(i.opt.t, 'f', -1, 64))
 	}
 	params = append(params, "-i", i.opt.i)
 	return

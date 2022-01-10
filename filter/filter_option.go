@@ -8,9 +8,9 @@ type option struct {
 	outstreams []string
 }
 
-func SetInStream(s string) OptionFunc {
+func SetInStream(s ...string) OptionFunc {
 	return func(o *option) {
-		o.instreams = append(o.instreams, s)
+		o.instreams = append(o.instreams, s...)
 	}
 }
 
@@ -20,8 +20,8 @@ func SetContent(c string) OptionFunc {
 	}
 }
 
-func SetOutStream(s string) OptionFunc {
+func SetOutStream(s ...string) OptionFunc {
 	return func(o *option) {
-		o.outstreams = append(o.outstreams, s)
+		o.outstreams = append(o.outstreams, s...)
 	}
 }
