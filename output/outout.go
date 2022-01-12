@@ -78,6 +78,9 @@ func (o *Output) Params() (params []string) {
 		if o.opt.hls_segment_filename != "" {
 			params = append(params, "-hls_segment_filename", o.opt.hls_segment_filename)
 		}
+		if o.opt.hls_key_info_file != "" {
+			params = append(params, "-hls_key_info_file", o.opt.hls_key_info_file)
+		}
 		params = append(params, "-hls_list_size", "0")
 	}
 	if o.opt.threads != 0 {

@@ -24,6 +24,7 @@ type option struct {
 	hls_time             int32
 	master_pl_name       string
 	hls_segment_filename string
+	hls_key_info_file    string // 加密
 
 	// img
 	vframes int32
@@ -141,6 +142,12 @@ func SetMasterPlName(value string) OptionFunc {
 func SetHlsSegmentFilename(value string) OptionFunc {
 	return func(o *option) {
 		o.hls_segment_filename = value
+	}
+}
+
+func SetHlsKeyInfoFile(f string) OptionFunc {
+	return func(o *option) {
+		o.hls_key_info_file = f
 	}
 }
 

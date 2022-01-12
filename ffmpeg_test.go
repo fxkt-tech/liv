@@ -1,7 +1,6 @@
 package ffmpeg
 
 import (
-	"context"
 	"testing"
 
 	"fxkt.tech/ffmpeg/filter"
@@ -36,6 +35,5 @@ func TestFFmpeg(t *testing.T) {
 			output.SetFile("out720.mp4"),
 		),
 	)
-	ff.Run(context.Background())
-	t.Log(ff.Sentence)
+	ff.DryRun()
 }

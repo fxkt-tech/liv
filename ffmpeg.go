@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os/exec"
 	"strings"
@@ -13,14 +14,14 @@ import (
 )
 
 type FFmpeg struct {
-	cmd      string
-	v        string // v is log level.
-	y        bool   // y is yes for overwrite output file.
-	inputs   input.Inputs
-	filters  filter.Filters
-	outputs  output.Outputs
-	Sentence string
-	opt      *option
+	cmd     string
+	v       string // v is log level.
+	y       bool   // y is yes for overwrite output file.
+	inputs  input.Inputs
+	filters filter.Filters
+	outputs output.Outputs
+	// Sentence string
+	opt *option
 }
 
 func Default() *FFmpeg {
@@ -80,9 +81,15 @@ func (ff *FFmpeg) Params() (params []string) {
 	return
 }
 
+func (ff *FFmpeg) DryRun() {
+	var ps []string
+	ps = append(ps, ff.cmd)
+	ps = append(ps, ff.Params()...)
+	fmt.Println(strings.Join(ps, " "))
+}
+
 func (ff *FFmpeg) Run(ctx context.Context) (err error) {
 	cc := exec.CommandContext(ctx, ff.cmd, ff.Params()...)
-	ff.Sentence = cc.String()
 	retbytes, err := cc.CombinedOutput()
 	log.Println(string(retbytes))
 	if err != nil {

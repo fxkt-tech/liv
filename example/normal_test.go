@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"testing"
 
 	"fxkt.tech/ffmpeg"
 	"fxkt.tech/ffmpeg/codec"
@@ -10,7 +11,7 @@ import (
 	"fxkt.tech/ffmpeg/output"
 )
 
-func main() {
+func TestNormal(t *testing.T) {
 	ff := ffmpeg.Default()
 	ff.AddInput(input.New(
 		input.SetI("in.mp4"),
@@ -21,7 +22,6 @@ func main() {
 		output.SetFile("out.mp4"),
 	))
 	err := ff.Run(context.Background())
-	fmt.Println(ff.Sentence)
 	if err != nil {
 		fmt.Println(err)
 	}

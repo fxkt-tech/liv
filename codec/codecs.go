@@ -6,4 +6,6 @@ const (
 	AudioAAC = "aac"
 
 	VideoX264 = "libx264"
+
+	Hls = "hls"
 )
