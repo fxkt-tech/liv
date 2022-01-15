@@ -9,19 +9,19 @@ type option struct {
 	ext []string // extra params.
 }
 
-func SetI(i string) OptionFunc {
+func I(i string) OptionFunc {
 	return func(o *option) {
 		o.i = i
 	}
 }
 
-func SetStartTime(ss float64) OptionFunc {
+func StartTime(ss float64) OptionFunc {
 	return func(o *option) {
 		o.ss = ss
 	}
 }
 
-func SetDuration(t float64) OptionFunc {
+func Duration(t float64) OptionFunc {
 	return func(o *option) {
 		o.t = t
 	}

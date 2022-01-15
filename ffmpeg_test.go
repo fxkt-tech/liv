@@ -12,27 +12,27 @@ func TestFFmpeg(t *testing.T) {
 	ff := Default()
 	ff.AddInput(
 		input.New(
-			input.SetI("vieo.mp4"),
+			input.I("vieo.mp4"),
 		),
 	)
 	ff.AddFilter(
 		filter.New(
-			filter.SetInStream("0"),
-			filter.SetContent("scale=trunc(oh*a/2)*2:720"),
-			filter.SetOutStream("x720"),
+			filter.InStream("0"),
+			filter.Content("scale=trunc(oh*a/2)*2:720"),
+			filter.OutStream("x720"),
 		),
 		filter.New(
-			filter.SetInStream("x720"),
-			filter.SetContent("delogo=0:0:100:100"),
-			filter.SetOutStream("xx720"),
+			filter.InStream("x720"),
+			filter.Content("delogo=0:0:100:100"),
+			filter.OutStream("xx720"),
 		),
 	)
 	ff.AddOutput(
 		output.New(
-			output.SetMap("xx720"),
-			output.SetMap("0:a"),
-			output.SetMetadata("comment", "yilan888"),
-			output.SetFile("out720.mp4"),
+			output.Map("xx720"),
+			output.Map("0:a"),
+			output.Metadata("comment", "yilan888"),
+			output.File("out720.mp4"),
 		),
 	)
 	ff.DryRun()

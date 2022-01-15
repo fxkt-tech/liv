@@ -14,12 +14,12 @@ import (
 func TestNormal(t *testing.T) {
 	ff := ffmpeg.Default()
 	ff.AddInput(input.New(
-		input.SetI("in.mp4"),
+		input.I("in.mp4"),
 	))
 	ff.AddOutput(output.New(
-		output.SetVideoCoder(codec.VideoX264),
-		output.SetAudioCoder(codec.Copy),
-		output.SetFile("out.mp4"),
+		output.VideoCoder(codec.VideoX264),
+		output.AudioCoder(codec.Copy),
+		output.File("out.mp4"),
 	))
 	err := ff.Run(context.Background())
 	if err != nil {

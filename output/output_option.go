@@ -8,6 +8,7 @@ type option struct {
 	maps                  []string // mean is -map.
 	cv, ca                string   // cv is c:v, ca is c:a.
 	bv, ba                int32    // bv is b:v, ba is b:a.
+	crf                   int32
 	metadatas             []string // mean is -metadata.
 	threads               int32    // thread counts, default 4.
 	max_muxing_queue_size int32    // queue size when muxing, default 4086.
@@ -30,19 +31,19 @@ type option struct {
 	vframes int32
 }
 
-func SetMap(m string) OptionFunc {
+func Map(m string) OptionFunc {
 	return func(o *option) {
 		o.maps = append(o.maps, m)
 	}
 }
 
-func SetMovFlags(flag string) OptionFunc {
+func MovFlags(flag string) OptionFunc {
 	return func(o *option) {
 		o.movflags = flag
 	}
 }
 
-func SetThread(n int32) OptionFunc {
+func Thread(n int32) OptionFunc {
 	return func(o *option) {
 		if n > 0 {
 			o.threads = n
@@ -50,61 +51,67 @@ func SetThread(n int32) OptionFunc {
 	}
 }
 
-func SetMaxMuxingQueueSize(sz int32) OptionFunc {
+func MaxMuxingQueueSize(sz int32) OptionFunc {
 	return func(o *option) {
 		o.max_muxing_queue_size = sz
 	}
 }
 
-func SetVideoCoder(cv string) OptionFunc {
+func VideoCoder(cv string) OptionFunc {
 	return func(o *option) {
 		o.cv = cv
 	}
 }
 
-func SetAudioCoder(ca string) OptionFunc {
+func AudioCoder(ca string) OptionFunc {
 	return func(o *option) {
 		o.ca = ca
 	}
 }
 
-func SetVideoBitrate(bv int32) OptionFunc {
+func VideoBitrate(bv int32) OptionFunc {
 	return func(o *option) {
 		o.bv = bv
 	}
 }
 
-func SetAudioBitrate(ba int32) OptionFunc {
+func Crf(crf int32) OptionFunc {
+	return func(o *option) {
+		o.crf = crf
+	}
+}
+
+func AudioBitrate(ba int32) OptionFunc {
 	return func(o *option) {
 		o.ba = ba
 	}
 }
 
-func SetMetadata(k, v string) OptionFunc {
+func Metadata(k, v string) OptionFunc {
 	return func(o *option) {
 		o.metadatas = append(o.metadatas, fmt.Sprintf("%s=%s", k, v))
 	}
 }
 
-func SetStartTime(ss float64) OptionFunc {
+func StartTime(ss float64) OptionFunc {
 	return func(o *option) {
 		o.ss = ss
 	}
 }
 
-func SetDuration(t float64) OptionFunc {
+func Duration(t float64) OptionFunc {
 	return func(o *option) {
 		o.t = t
 	}
 }
 
-func SetFile(f string) OptionFunc {
+func File(f string) OptionFunc {
 	return func(o *option) {
 		o.file = f
 	}
 }
 
-func SetFormat(f string) OptionFunc {
+func Format(f string) OptionFunc {
 	return func(o *option) {
 		o.f = f
 	}
@@ -112,40 +119,40 @@ func SetFormat(f string) OptionFunc {
 
 // hls
 
-func SetHlsSegmentType(value string) OptionFunc {
+func HlsSegmentType(value string) OptionFunc {
 	return func(o *option) {
 		o.hls_segment_type = value
 	}
 }
 
-func SetHlsFlags(value string) OptionFunc {
+func HlsFlags(value string) OptionFunc {
 	return func(o *option) {
 		o.hls_flags = value
 	}
 }
 
-func SetHlsPlaylistType(value string) OptionFunc {
+func HlsPlaylistType(value string) OptionFunc {
 	return func(o *option) {
 		o.hls_playlist_type = value
 	}
 }
-func SetHlsTime(value int32) OptionFunc {
+func HlsTime(value int32) OptionFunc {
 	return func(o *option) {
 		o.hls_time = value
 	}
 }
-func SetMasterPlName(value string) OptionFunc {
+func MasterPlName(value string) OptionFunc {
 	return func(o *option) {
 		o.master_pl_name = value
 	}
 }
-func SetHlsSegmentFilename(value string) OptionFunc {
+func HlsSegmentFilename(value string) OptionFunc {
 	return func(o *option) {
 		o.hls_segment_filename = value
 	}
 }
 
-func SetHlsKeyInfoFile(f string) OptionFunc {
+func HlsKeyInfoFile(f string) OptionFunc {
 	return func(o *option) {
 		o.hls_key_info_file = f
 	}
@@ -153,7 +160,7 @@ func SetHlsKeyInfoFile(f string) OptionFunc {
 
 // img
 
-func SetVframes(vframes int32) OptionFunc {
+func Vframes(vframes int32) OptionFunc {
 	return func(o *option) {
 		o.vframes = vframes
 	}

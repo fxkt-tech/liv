@@ -50,6 +50,9 @@ func (o *Output) Params() (params []string) {
 	if o.opt.ba != 0 {
 		params = append(params, "-b:a", strconv.FormatInt(int64(o.opt.ba), 10))
 	}
+	if o.opt.crf != 0 {
+		params = append(params, "-crf", strconv.FormatInt(int64(o.opt.crf), 10))
+	}
 	if o.opt.vframes != 0 {
 		params = append(params, "-vframes", strconv.FormatInt(int64(o.opt.vframes), 10))
 	}

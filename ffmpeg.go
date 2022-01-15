@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 
@@ -91,7 +90,6 @@ func (ff *FFmpeg) DryRun() {
 func (ff *FFmpeg) Run(ctx context.Context) (err error) {
 	cc := exec.CommandContext(ctx, ff.cmd, ff.Params()...)
 	retbytes, err := cc.CombinedOutput()
-	log.Println(string(retbytes))
 	if err != nil {
 		errstr := strings.ReplaceAll(string(retbytes), "\n", "|")
 		if len(errstr) > 200 {
