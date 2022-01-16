@@ -61,6 +61,9 @@ func (o *Output) Params() (params []string) {
 			params = append(params, "-metadata", m)
 		}
 	}
+	if o.opt.var_stream_map != "" {
+		params = append(params, "-var_stream_map", o.opt.var_stream_map)
+	}
 	if o.opt.f == "hls" {
 		if o.opt.hls_segment_type != "" {
 			params = append(params, "-hls_segment_type", o.opt.hls_segment_type)

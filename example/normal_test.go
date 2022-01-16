@@ -17,8 +17,8 @@ func TestNormal(t *testing.T) {
 		input.I("in.mp4"),
 	))
 	ff.AddOutput(output.New(
-		output.VideoCoder(codec.VideoX264),
-		output.AudioCoder(codec.Copy),
+		output.VideoCodec(codec.X264),
+		output.AudioCodec(codec.Copy),
 		output.File("out.mp4"),
 	))
 	err := ff.Run(context.Background())

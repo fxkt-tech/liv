@@ -19,8 +19,8 @@ func TestFilter(t *testing.T) {
 		filter.Content(filter.Logo(10, 10, filter.LogoTopRight)),
 	))
 	ff.AddOutput(output.New(
-		output.VideoCoder(codec.VideoX264),
-		output.AudioCoder(codec.Copy),
+		output.VideoCodec(codec.X264),
+		output.AudioCodec(codec.Copy),
 		output.File("out.mp4"),
 	))
 	ff.DryRun()

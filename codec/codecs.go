@@ -3,9 +3,16 @@ package codec
 const (
 	Copy = "copy"
 
-	AudioAAC = "aac"
+	// audio
+	AAC    = "aac"
+	FDKAAC = "libfdk_aac"
 
-	VideoX264 = "libx264"
+	// video
+	X264  = "libx264"
+	WZ264 = "libwz264"
+	X265  = "libx265"
+	WZ265 = "libwz265"
 
-	Hls = "hls"
+	Hls  = "hls"
+	Dash = "dash"
 )

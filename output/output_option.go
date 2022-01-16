@@ -17,6 +17,7 @@ type option struct {
 	t                     float64  // t is duration.
 	f                     string   // f is -f format.
 	file                  string
+	var_stream_map        string
 
 	// hls configs
 	hls_segment_type     string
@@ -57,13 +58,13 @@ func MaxMuxingQueueSize(sz int32) OptionFunc {
 	}
 }
 
-func VideoCoder(cv string) OptionFunc {
+func VideoCodec(cv string) OptionFunc {
 	return func(o *option) {
 		o.cv = cv
 	}
 }
 
-func AudioCoder(ca string) OptionFunc {
+func AudioCodec(ca string) OptionFunc {
 	return func(o *option) {
 		o.ca = ca
 	}
@@ -114,6 +115,12 @@ func File(f string) OptionFunc {
 func Format(f string) OptionFunc {
 	return func(o *option) {
 		o.f = f
+	}
+}
+
+func VarStreamMap(s string) OptionFunc {
+	return func(o *option) {
+		o.var_stream_map = s
 	}
 }
 
