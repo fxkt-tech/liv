@@ -1,10 +1,18 @@
-package ffmpeg
+package echotool
 
 import (
 	"context"
 	"encoding/json"
 	"os/exec"
 )
+
+type FFprobeOption func(*FFprobe)
+
+func FPCmdLoc(loc string) FFprobeOption {
+	return func(f *FFprobe) {
+		f.cmd = loc
+	}
+}
 
 type FFprobe struct {
 	cmd          string
@@ -18,14 +26,18 @@ type FFprobe struct {
 	Sentence string
 }
 
-func DefaultProbe() *FFprobe {
-	return &FFprobe{
+func NewProbe(opts ...FFprobeOption) *FFprobe {
+	f := &FFprobe{
 		cmd:          "ffprobe",
 		v:            "quiet",
 		print_format: "json",
 		show_format:  true,
 		show_streams: true,
 	}
+	for _, o := range opts {
+		o(f)
+	}
+	return f
 }
 
 func (ff *FFprobe) CmdLoc(loc string) {

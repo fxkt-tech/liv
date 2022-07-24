@@ -1,8 +1,10 @@
 package math
 
+import "golang.org/x/exp/constraints"
+
 // 最接近n的最小偶数
 // eg： CeilOdd(41) is 40, CeilOdd(30) is also 30.
-func CeilOddInt64(n int64) int64 {
+func CeilOdd[T constraints.Integer](n T) T {
 	if n%2 == 0 {
 		return n
 	}

@@ -1,4 +1,4 @@
-package ffmpeg
+package echotool
 
 type Probe struct {
 	Streams []*ProbeStream `json:"streams,omitempty"`
