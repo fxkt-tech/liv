@@ -1,5 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/home/raiden/go/src/github.com/fxkt-tech/echo'
-go test -v ./... -cover
-make: Leaving directory '/home/raiden/go/src/github.com/fxkt-tech/echo'
- 

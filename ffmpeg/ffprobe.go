@@ -1,4 +1,4 @@
-package echotool
+package ffmpeg
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func FPCmdLoc(loc string) FFprobeOption {
 
 type FFprobe struct {
 	cmd          string
-	v            string // loglevel
+	v            LogLevel // loglevel
 	print_format string
 	show_format  bool
 	show_streams bool
@@ -29,7 +29,7 @@ type FFprobe struct {
 func NewProbe(opts ...FFprobeOption) *FFprobe {
 	f := &FFprobe{
 		cmd:          "ffprobe",
-		v:            "quiet",
+		v:            LogLevelQuiet,
 		print_format: "json",
 		show_format:  true,
 		show_streams: true,
@@ -45,7 +45,7 @@ func (ff *FFprobe) CmdLoc(loc string) {
 }
 
 func (ff *FFprobe) Params() (params []string) {
-	params = append(params, "-v", ff.v)
+	params = append(params, "-v", ff.v.String())
 	params = append(params, "-print_format", ff.print_format)
 	if ff.show_format {
 		params = append(params, "-show_format")
@@ -67,6 +67,9 @@ func (ff *FFprobe) Run(ctx context.Context) (err error) {
 	cc := exec.CommandContext(ctx, ff.cmd, ff.Params()...)
 	ff.Sentence = cc.String()
 	retbytes, err := cc.CombinedOutput()
+	if err != nil {
+		return err
+	}
 	probe := &Probe{}
 	err = json.Unmarshal(retbytes, probe)
 	if err != nil {

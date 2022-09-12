@@ -1,4 +1,4 @@
-package echotool
+package ffmpeg
 
 import (
 	"context"
@@ -7,16 +7,16 @@ import (
 	"os/exec"
 	"strings"
 
-	"fxkt.tech/echo/tool/filter"
-	"fxkt.tech/echo/tool/input"
-	"fxkt.tech/echo/tool/output"
+	"fxkt.tech/liv/ffmpeg/filter"
+	"fxkt.tech/liv/ffmpeg/input"
+	"fxkt.tech/liv/ffmpeg/output"
 )
 
 type FFmpegOption func(*FFmpeg)
 
-func CmdLoc(loc string) FFmpegOption {
+func Binary(bin string) FFmpegOption {
 	return func(fm *FFmpeg) {
-		fm.cmd = loc
+		fm.bin = bin
 	}
 }
 
@@ -26,16 +26,24 @@ func Yes(y bool) FFmpegOption {
 	}
 }
 
-func LogLevel(v string) FFmpegOption {
+func V(v LogLevel) FFmpegOption {
 	return func(fm *FFmpeg) {
 		fm.v = v
 	}
 }
 
+func Dry(dry bool) FFmpegOption {
+	return func(f *FFmpeg) {
+		f.dry = dry
+	}
+}
+
 type FFmpeg struct {
-	cmd string
-	v   string // v is log level.
-	y   bool   // y is yes for overwrite output file.
+	dry bool // dry run
+
+	bin string
+	v   LogLevel // v is log level.
+	y   bool     // y is yes for overwrite output file.
 
 	inputs  input.Inputs
 	filters filter.Filters
@@ -48,9 +56,9 @@ type Generater interface {
 
 func NewFFmpeg(opts ...FFmpegOption) *FFmpeg {
 	fm := &FFmpeg{
-		cmd: "ffmpeg",
+		bin: "ffmpeg",
 		y:   true,
-		v:   "error",
+		v:   LogLevelError,
 	}
 	for _, o := range opts {
 		o(fm)
@@ -76,7 +84,7 @@ func (fm *FFmpeg) AddOutput(outputs ...*output.Output) *FFmpeg {
 func (fm *FFmpeg) Params() []string {
 	var params []string
 	if fm.v != "" {
-		params = append(params, "-v", fm.v)
+		params = append(params, "-v", fm.v.String())
 	}
 	if fm.y {
 		params = append(params, "-y")
@@ -89,20 +97,20 @@ func (fm *FFmpeg) Params() []string {
 
 func (ff *FFmpeg) DryRun() {
 	var ps []string
-	ps = append(ps, ff.cmd)
+	ps = append(ps, ff.bin)
 	ps = append(ps, ff.Params()...)
 	fmt.Println(strings.Join(ps, " "))
 }
 
 func (ff *FFmpeg) Run(ctx context.Context) (err error) {
-	cc := exec.CommandContext(ctx, ff.cmd, ff.Params()...)
+	if ff.dry {
+		ff.DryRun()
+		return nil
+	}
+	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
 	retbytes, err := cc.CombinedOutput()
 	if err != nil {
-		errstr := strings.ReplaceAll(string(retbytes), "\n", "|")
-		if len(errstr) > 200 {
-			errstr = errstr[:200]
-		}
-		err = errors.New(errstr)
+		err = errors.New(string(retbytes))
 	}
 	return
 }

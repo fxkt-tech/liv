@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"fxkt.tech/echo/tool/codec"
+	"fxkt.tech/liv/ffmpeg/codec"
 )
 
 type OutputOption func(*Output)
@@ -104,24 +104,24 @@ func VarStreamMap(s string) OutputOption {
 
 // hls
 
-func HlsSegmentType(value string) OutputOption {
+func HLSSegmentType(value string) OutputOption {
 	return func(o *Output) {
 		o.hls_segment_type = value
 	}
 }
 
-func HlsFlags(value string) OutputOption {
+func HLSFlags(value string) OutputOption {
 	return func(o *Output) {
 		o.hls_flags = value
 	}
 }
 
-func HlsPlaylistType(value string) OutputOption {
+func HLSPlaylistType(value string) OutputOption {
 	return func(o *Output) {
 		o.hls_playlist_type = value
 	}
 }
-func HlsTime(value int32) OutputOption {
+func HLSTime(value int32) OutputOption {
 	return func(o *Output) {
 		o.hls_time = value
 	}
@@ -131,13 +131,13 @@ func MasterPlName(value string) OutputOption {
 		o.master_pl_name = value
 	}
 }
-func HlsSegmentFilename(value string) OutputOption {
+func HLSSegmentFilename(value string) OutputOption {
 	return func(o *Output) {
 		o.hls_segment_filename = value
 	}
 }
 
-func HlsKeyInfoFile(f string) OutputOption {
+func HLSKeyInfoFile(f string) OutputOption {
 	return func(o *Output) {
 		o.hls_key_info_file = f
 	}

@@ -13,6 +13,7 @@ const (
 	X265  = "libx265"
 	WZ265 = "libwz265"
 
-	Hls  = "hls"
+	HLS  = "hls"
 	Dash = "dash"
+	MP4  = "mp4"
 )

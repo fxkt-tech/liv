@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"fxkt.tech/echo/internal/math"
+	"fxkt.tech/liv/internal/math"
 )
 
 type Filter interface {
@@ -85,7 +85,6 @@ const (
 	LogoBottomLeft  LogoPos = "BottomLeft"
 )
 
-//
 func Logo(name string, dx, dy int64, pos LogoPos) Filter {
 	var content string
 	switch pos {
