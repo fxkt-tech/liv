@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"fxkt.tech/liv/ffmpeg/codec"
+	"github.com/fxkt-tech/liv/ffmpeg/codec"
 )
 
 type OutputOption func(*Output)

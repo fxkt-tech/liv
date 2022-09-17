@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"fxkt.tech/liv/internal/math"
+	"github.com/fxkt-tech/liv/internal/math"
 )
 
 type Filter interface {

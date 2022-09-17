@@ -1,4 +1,4 @@
-module fxkt.tech/liv
+module github.com/fxkt-tech/liv
 
 go 1.19
 

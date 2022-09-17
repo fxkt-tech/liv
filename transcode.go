@@ -3,12 +3,12 @@ package liv
 import (
 	"context"
 
-	"fxkt.tech/liv/ffmpeg"
-	"fxkt.tech/liv/ffmpeg/codec"
-	"fxkt.tech/liv/ffmpeg/filter"
-	"fxkt.tech/liv/ffmpeg/input"
-	"fxkt.tech/liv/ffmpeg/naming"
-	"fxkt.tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/ffmpeg"
+	"github.com/fxkt-tech/liv/ffmpeg/codec"
+	"github.com/fxkt-tech/liv/ffmpeg/filter"
+	"github.com/fxkt-tech/liv/ffmpeg/input"
+	"github.com/fxkt-tech/liv/ffmpeg/naming"
+	"github.com/fxkt-tech/liv/ffmpeg/output"
 )
 
 type TranscodeOption func(*Transcode)

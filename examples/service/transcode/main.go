@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"fxkt.tech/liv"
-	"fxkt.tech/liv/ffmpeg"
-	"fxkt.tech/liv/ffmpeg/codec"
+	"github.com/fxkt-tech/liv"
+	"github.com/fxkt-tech/liv/ffmpeg"
+	"github.com/fxkt-tech/liv/ffmpeg/codec"
 )
 
 func main() {

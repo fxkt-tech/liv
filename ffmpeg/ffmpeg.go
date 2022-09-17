@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"fxkt.tech/liv/ffmpeg/filter"
-	"fxkt.tech/liv/ffmpeg/input"
-	"fxkt.tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/ffmpeg/filter"
+	"github.com/fxkt-tech/liv/ffmpeg/input"
+	"github.com/fxkt-tech/liv/ffmpeg/output"
 )
 
 type FFmpegOption func(*FFmpeg)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"fxkt.tech/liv/ffmpeg/naming"
+	"github.com/fxkt-tech/liv/ffmpeg/naming"
 )
 
 func TestGen(t *testing.T) {
