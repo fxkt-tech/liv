@@ -24,6 +24,9 @@ type CommonFilter struct {
 }
 
 func (cf *CommonFilter) Name(index int) string {
+	if cf.name == "" {
+		return ""
+	}
 	return fmt.Sprintf("[%s%d]", cf.name, index)
 }
 
@@ -150,6 +153,22 @@ func Delogo(name string, x, y, w, h int64) Filter {
 			x+1, y+1, w-2, h-2,
 		),
 		counts: 1,
+	}
+}
+
+func Select(name, expr string) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("select=%s", expr),
+		counts:  1,
+	}
+}
+
+func FPS(name string, fps *math.Rational[int32]) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("fps=fps=%d/%d", fps.Num, fps.Den),
+		counts:  1,
 	}
 }
 

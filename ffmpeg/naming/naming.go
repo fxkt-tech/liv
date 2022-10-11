@@ -26,3 +26,7 @@ func (n *Naming) Gen() string {
 func (n *Naming) Gen64() string {
 	return fmt.Sprintf("%x", math.MaxInt64)
 }
+
+func (n *Naming) Empty() string {
+	return ""
+}

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/fxkt-tech/liv/ffmpeg/codec"
 )
 
 type OutputOption func(*Output)
@@ -102,6 +100,12 @@ func VarStreamMap(s string) OutputOption {
 	}
 }
 
+func VSync(vsync string) OutputOption {
+	return func(o *Output) {
+		o.vsync = vsync
+	}
+}
+
 // hls
 
 func HLSSegmentType(value string) OutputOption {
@@ -121,16 +125,19 @@ func HLSPlaylistType(value string) OutputOption {
 		o.hls_playlist_type = value
 	}
 }
+
 func HLSTime(value int32) OutputOption {
 	return func(o *Output) {
 		o.hls_time = value
 	}
 }
+
 func MasterPlName(value string) OutputOption {
 	return func(o *Output) {
 		o.master_pl_name = value
 	}
 }
+
 func HLSSegmentFilename(value string) OutputOption {
 	return func(o *Output) {
 		o.hls_segment_filename = value
@@ -166,6 +173,7 @@ type Output struct {
 	f                     string   // f is -f format.
 	file                  string
 	var_stream_map        string
+	vsync                 string
 
 	// hls configs
 	hls_segment_type     string
@@ -182,12 +190,12 @@ type Output struct {
 
 func New(opts ...OutputOption) *Output {
 	op := &Output{
-		threads:               4,
-		max_muxing_queue_size: 4086,
-		movflags:              "faststart",
-		cv:                    codec.X264,
-		ca:                    codec.Copy,
-		hls_time:              2,
+		// threads:               4,
+		// max_muxing_queue_size: 4086,
+		// movflags: "faststart",
+		// cv:                    codec.X264,
+		// ca:                    codec.Copy,
+		// hls_time:              2,
 	}
 	for _, o := range opts {
 		o(op)
@@ -226,6 +234,9 @@ func (o *Output) Params() (params []string) {
 	}
 	if o.var_stream_map != "" {
 		params = append(params, "-var_stream_map", o.var_stream_map)
+	}
+	if o.vsync != "" {
+		params = append(params, "-vsync", o.vsync)
 	}
 	if o.f == "hls" {
 		if o.hls_segment_type != "" {

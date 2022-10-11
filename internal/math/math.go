@@ -17,3 +17,14 @@ func CeilOddInt32(n int32) int32 {
 	}
 	return n - 1
 }
+
+type Rational[T constraints.Integer] struct {
+	Num, Den T
+}
+
+func Fraction[T constraints.Integer](num, den T) *Rational[T] {
+	return &Rational[T]{
+		Num: num,
+		Den: den,
+	}
+}

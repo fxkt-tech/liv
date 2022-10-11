@@ -11,33 +11,20 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 )
 
-type TranscodeOption func(*Transcode)
-
-func FFmpegOptions(ffmpegOpts ...ffmpeg.FFmpegOption) TranscodeOption {
-	return func(t *Transcode) {
-		t.ffmpegOpts = ffmpegOpts
-	}
-}
-
-func FFprobeOptions(ffprobeOpts ...ffmpeg.FFprobeOption) TranscodeOption {
-	return func(t *Transcode) {
-		t.ffprobeOpts = ffprobeOpts
-	}
-}
-
 type Transcode struct {
-	ffmpegOpts  []ffmpeg.FFmpegOption
-	ffprobeOpts []ffmpeg.FFprobeOption
+	*options
 
 	spec *TranscodeSpec
 }
 
-func NewTranscode(opts ...TranscodeOption) *Transcode {
-	tc := &Transcode{
-		spec: NewTranscodeSpec(),
-	}
+func NewTranscode(opts ...Option) *Transcode {
+	o := &options{}
 	for _, opt := range opts {
-		opt(tc)
+		opt(o)
+	}
+	tc := &Transcode{
+		spec:    NewTranscodeSpec(),
+		options: o,
 	}
 	return tc
 }
@@ -100,6 +87,9 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 			output.Map(filter.SelectStream(0, filter.StreamAudio, false)),
 			output.VideoCodec(codec.X264),
 			output.AudioCodec(codec.AAC),
+			output.MovFlags("faststart"),
+			output.Thread(4),
+			output.MaxMuxingQueueSize(4086),
 			output.File(sub.Outfile),
 		}
 		// 处理在每一路输出流的裁剪
