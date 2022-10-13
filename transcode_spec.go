@@ -6,8 +6,16 @@ func NewTranscodeSpec() *TranscodeSpec {
 	return &TranscodeSpec{}
 }
 
-func (*TranscodeSpec) CheckSatified(params *TranscodeParams) error {
+func (*TranscodeSpec) SimpleMP4Satified(params *TranscodeParams) error {
 	if params == nil || len(params.Subs) == 0 {
+		return ErrParamsInvalid
+	}
+
+	return nil
+}
+
+func (*TranscodeSpec) ConvertContainerSatified(params *ConvertContainerParams) error {
+	if params == nil || params.InFile == "" || params.OutFile == "" {
 		return ErrParamsInvalid
 	}
 	return nil

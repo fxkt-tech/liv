@@ -1,5 +1,11 @@
 package liv
 
+type ConvertContainerParams struct {
+	InFile  string
+	OutFile string
+	Threads int32
+}
+
 type TranscodeParams struct {
 	Infile string
 	Subs   []*SubTranscodeParams
@@ -7,6 +13,7 @@ type TranscodeParams struct {
 type SubTranscodeParams struct {
 	Outfile string
 	Filters *Filters
+	Threads int32
 }
 
 type Filters struct {
@@ -20,6 +27,7 @@ type Filters struct {
 }
 
 type Video struct {
+	Codec     string  `json:"codec,omitempty"`
 	Width     int32   `json:"width,omitempty"`
 	Height    int32   `json:"height,omitempty"`
 	Short     int32   `json:"short,omitempty"`
@@ -29,7 +37,8 @@ type Video struct {
 }
 
 type Audio struct {
-	Bitrate int32 `json:"bitrate,omitempty"`
+	Codec   string `json:"codec,omitempty"`
+	Bitrate int32  `json:"bitrate,omitempty"`
 }
 
 type Logo struct {

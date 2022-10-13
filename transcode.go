@@ -30,7 +30,7 @@ func NewTranscode(opts ...Option) *Transcode {
 }
 
 func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) error {
-	err := tc.spec.CheckSatified(params)
+	err := tc.spec.SimpleMP4Satified(params)
 	if err != nil {
 		return err
 	}
@@ -85,13 +85,14 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		outputOpts := []output.OutputOption{
 			output.Map(lastFilter.Name(0)),
 			output.Map(filter.SelectStream(0, filter.StreamAudio, false)),
-			output.VideoCodec(codec.X264),
-			output.AudioCodec(codec.AAC),
+			output.VideoCodec(sub.Filters.Video.Codec),
+			output.AudioCodec(sub.Filters.Audio.Codec),
 			output.MovFlags("faststart"),
-			output.Thread(4),
+			output.Thread(sub.Threads),
 			output.MaxMuxingQueueSize(4086),
 			output.File(sub.Outfile),
 		}
+
 		// 处理在每一路输出流的裁剪
 		if sub.Filters.Clip != nil {
 			outputOpts = append(outputOpts,
@@ -99,12 +100,44 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 				output.Duration(sub.Filters.Clip.Duration),
 			)
 		}
+
 		outputs = append(outputs, output.New(outputOpts...))
 	}
 
 	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
+		AddOutput(outputs...).
+		Run(ctx)
+}
+
+func (tc *Transcode) ConvertContainer(ctx context.Context, params *ConvertContainerParams) error {
+	err := tc.spec.ConvertContainerSatified(params)
+	if err != nil {
+		return err
+	}
+
+	var (
+		inputs  input.Inputs
+		outputs output.Outputs
+	)
+
+	// 处理input
+	inputs = append(inputs, input.WithSimple(params.InFile))
+
+	// 处理output
+	outputOpts := []output.OutputOption{
+		output.VideoCodec(codec.Copy),
+		output.AudioCodec(codec.Copy),
+		output.MovFlags("faststart"),
+		output.Thread(params.Threads),
+		output.MaxMuxingQueueSize(4086),
+		output.File(params.OutFile),
+	}
+	outputs = append(outputs, output.New(outputOpts...))
+
+	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+		AddInput(inputs...).
 		AddOutput(outputs...).
 		Run(ctx)
 }

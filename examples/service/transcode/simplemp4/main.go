@@ -13,18 +13,22 @@ func main() {
 	var (
 		ctx    = context.Background()
 		params = &liv.TranscodeParams{
-			Infile: "in1.mp4",
+			Infile: "../../../testdata/in.mp4",
 			Subs: []*liv.SubTranscodeParams{
 				{
-					Outfile: "out1.mp4",
+					Outfile: "out-simple-mp4.mp4",
 					Filters: &liv.Filters{
 						Container: codec.MP4,
 						Video: &liv.Video{
+							Codec:  codec.X264,
 							Height: 540,
+						},
+						Audio: &liv.Audio{
+							Codec: codec.AAC,
 						},
 						Logo: []*liv.Logo{
 							{
-								File: "logo1.png",
+								File: "../../../testdata/logo.png",
 								Dx:   10,
 								Dy:   8,
 								Pos:  "TopRight",
@@ -37,10 +41,14 @@ func main() {
 					},
 				},
 				{
-					Outfile: "out2.mp4",
+					Outfile: "out-simple-mp4-2.mp4",
 					Filters: &liv.Filters{
 						Video: &liv.Video{
+							Codec:  codec.X264,
 							Height: 720,
+						},
+						Audio: &liv.Audio{
+							Codec: codec.AAC,
 						},
 					},
 				},
