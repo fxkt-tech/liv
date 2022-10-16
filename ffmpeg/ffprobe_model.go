@@ -19,8 +19,9 @@ type ProbeStream struct {
 	PixFmt     string `json:"pix_fmt,omitempty"`
 	Level      int32  `json:"level,omitempty"`
 	RFrameRate string `json:"r_frame_rate,omitempty"`
-	Sar        string `json:"sample_aspect_radio,omitempty"`
-	Dar        string `json:"display_aspect_radio,omitempty"`
+	SAR        string `json:"sample_aspect_radio,omitempty"`
+	DAR        string `json:"display_aspect_radio,omitempty"`
+	NBFrames   int32  `json:"nb_frames,omitempty,string"`
 
 	// audio
 	SampleFmt     string `json:"sample_fmt,omitempty"`         // 采样格式
