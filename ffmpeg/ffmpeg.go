@@ -20,6 +20,12 @@ func Binary(bin string) FFmpegOption {
 	}
 }
 
+func Debug(debug bool) FFmpegOption {
+	return func(fm *FFmpeg) {
+		fm.debug = debug
+	}
+}
+
 func Yes(y bool) FFmpegOption {
 	return func(fm *FFmpeg) {
 		fm.y = y
@@ -40,6 +46,8 @@ func Dry(dry bool) FFmpegOption {
 
 type FFmpeg struct {
 	dry bool // dry run
+
+	debug bool
 
 	bin string
 	v   LogLevel // v is log level.
@@ -103,9 +111,13 @@ func (ff *FFmpeg) DryRun() {
 }
 
 func (ff *FFmpeg) Run(ctx context.Context) (err error) {
-	if ff.dry {
+	if ff.debug {
 		ff.DryRun()
-		return nil
+	} else {
+		if ff.dry {
+			ff.DryRun()
+			return nil
+		}
 	}
 	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
 	retbytes, err := cc.CombinedOutput()
