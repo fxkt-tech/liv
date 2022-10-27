@@ -53,12 +53,12 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
-		var lastFilter filter.Filter
+		lastFilter := fsplit.Copy(i)
 
 		// 处理遮标
 		if delogos := sub.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
-				fdelogo := filter.Delogo(nm.Gen(), int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H))
+				fdelogo := filter.Delogo(nm.Gen(), int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
 			}
@@ -66,7 +66,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 
 		// 视频缩放
 		if sub.Filters.Video != nil {
-			scale := filter.Scale(nm.Gen(), sub.Filters.Video.Width, sub.Filters.Video.Height).Use(fsplit.Copy(i))
+			scale := filter.Scale(nm.Gen(), sub.Filters.Video.Width, sub.Filters.Video.Height).Use(lastFilter)
 			filters = append(filters, scale)
 			lastFilter = scale
 		}
