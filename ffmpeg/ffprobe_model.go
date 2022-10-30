@@ -7,11 +7,12 @@ type Probe struct {
 
 type ProbeStream struct {
 	// common
-	Index     int32  `json:"index,omitempty"`
-	CodecType string `json:"codec_type,omitempty"`
-	CodecName string `json:"codec_name,omitempty"`
-	Profile   string `json:"profile,omitempty"`
-	BitRate   int32  `json:"bit_rate,omitempty,string"`
+	Index     int32   `json:"index,omitempty"`
+	CodecType string  `json:"codec_type,omitempty"`
+	CodecName string  `json:"codec_name,omitempty"`
+	Profile   string  `json:"profile,omitempty"`
+	BitRate   int32   `json:"bit_rate,omitempty,string"`
+	Duration  float64 `json:"duration,omitempty,string"`
 
 	// video
 	Width      int32  `json:"width,omitempty"`

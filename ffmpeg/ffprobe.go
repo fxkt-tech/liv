@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os/exec"
 )
 
@@ -58,7 +59,7 @@ func (ff *FFprobe) Input(input string) *FFprobe {
 	return ff
 }
 
-func (ff *FFprobe) Run(ctx context.Context) (err error) {
+func (ff *FFprobe) Run(ctx context.Context) error {
 	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
 	ff.Sentence = cc.String()
 	retbytes, err := cc.CombinedOutput()
@@ -68,10 +69,13 @@ func (ff *FFprobe) Run(ctx context.Context) (err error) {
 	probe := &Probe{}
 	err = json.Unmarshal(retbytes, probe)
 	if err != nil {
-		return
+		return err
+	}
+	if string(retbytes) == "{}" {
+		return errors.New("file is not a media stream")
 	}
 	ff.probe = probe
-	return
+	return nil
 }
 
 func (ff *FFprobe) GetFirstVideoStream() *ProbeStream {

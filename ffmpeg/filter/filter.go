@@ -172,6 +172,14 @@ func FPS(name string, fps *math.Rational[int32]) Filter {
 	}
 }
 
+func Tile(name string, xlen, ylen int32) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("tile=%d*%d", xlen, ylen),
+		counts:  1,
+	}
+}
+
 // filter slice
 
 type Filters []Filter
