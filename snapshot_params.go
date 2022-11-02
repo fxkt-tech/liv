@@ -7,8 +7,8 @@ type SnapshotParams struct {
 	Interval  int32
 	Num       int32
 	FrameType int32
-	NotBlack  bool
-	NotWhite  bool
+	Width     int32
+	Height    int32
 }
 
 type SpriteParams struct {

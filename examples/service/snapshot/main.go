@@ -15,16 +15,18 @@ func main() {
 			Infile:    "../../testdata/in.mp4",
 			Outfile:   "ss/simple-%05d.jpg",
 			StartTime: 3,
-			FrameType: 0,
+			FrameType: 1,
 			Num:       1,
-			Interval:  1,
+			// Interval:  1,
+			Width:  960,
+			Height: 540,
 		}
 	)
 
 	tc := liv.NewSnapshot(
 		liv.FFmpegOptions(
 			ffmpeg.Binary("ffmpeg"),
-			// ffmpeg.Dry(true),
+			ffmpeg.Debug(true),
 		),
 	)
 	err := tc.Simple(ctx, params)

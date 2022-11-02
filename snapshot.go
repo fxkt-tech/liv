@@ -51,17 +51,34 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 
 	inputs = append(inputs, input.WithTime(params.StartTime, 0, params.Infile))
 
+	var lastFilter filter.Filter
 	// 使用普通帧截图时，必须要传截图间隔，除非只截一张
 	switch params.FrameType {
 	case 0: // 关键帧
-		filters = append(filters, filter.Select(nm.Empty(), "'eq(pict_type,I)'"))
+		selectFilter := filter.Select(nm.Gen(), "'eq(pict_type,I)'")
+		filters = append(filters, selectFilter)
+		lastFilter = selectFilter
 		outputOptions = append(outputOptions, output.VSync("vfr"))
 	case 1:
-		if params.Num != 1 {
-			filters = append(filters, filter.FPS(nm.Empty(), math.Fraction(1, params.Interval)))
+		var interval int32
+		if interval == 0 {
+			interval = 1
+		} else {
+			interval = params.Interval
 		}
+		fpsFilter := filter.FPS(nm.Gen(), math.Fraction(1, interval))
+		filters = append(filters, fpsFilter)
+		lastFilter = fpsFilter
+	}
+	if params.Width > 0 || params.Height > 0 {
+		scaleFilter := filter.Scale(nm.Gen(), params.Width, params.Height).Use(lastFilter)
+		filters = append(filters, scaleFilter)
+		lastFilter = scaleFilter
 	}
 
+	if lastFilter != nil {
+		outputOptions = append(outputOptions, output.Map(lastFilter.Name(0)))
+	}
 	outputOptions = append(outputOptions,
 		output.Vframes(params.Num),
 		output.File(params.Outfile),
