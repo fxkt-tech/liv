@@ -14,10 +14,10 @@ func main() {
 		params = &liv.SnapshotParams{
 			Infile:    "../../testdata/in.mp4",
 			Outfile:   "ss/simple-%05d.jpg",
-			StartTime: 3,
-			FrameType: 1,
-			Num:       1,
-			// Interval:  1,
+			StartTime: 0,
+			// FrameType: 1,
+			Num: 4,
+			// Interval: 5,
 			Width:  960,
 			Height: 540,
 		}

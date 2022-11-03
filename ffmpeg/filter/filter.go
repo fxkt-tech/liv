@@ -27,6 +27,9 @@ func (cf *CommonFilter) Name(index int) string {
 	if cf.name == "" {
 		return ""
 	}
+	if cf.counts == 0 {
+		return fmt.Sprintf("[%s]", cf.name)
+	}
 	return fmt.Sprintf("[%s%d]", cf.name, index)
 }
 
@@ -71,12 +74,14 @@ const (
 )
 
 // SelectStream used for input stream selection.
-func SelectStream(idx int, s Stream, must bool) string {
+func SelectStream(idx int, s Stream, must bool) Filter {
 	var qm string
 	if !must {
 		qm = "?"
 	}
-	return fmt.Sprintf("%d:%s%s", idx, s, qm)
+	return &CommonFilter{
+		name: fmt.Sprintf("%d:%s%s", idx, s, qm),
+	}
 }
 
 type LogoPos string

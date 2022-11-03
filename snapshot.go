@@ -51,7 +51,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 
 	inputs = append(inputs, input.WithTime(params.StartTime, 0, params.Infile))
 
-	var lastFilter filter.Filter
+	lastFilter := filter.SelectStream(0, filter.StreamVideo, true)
 	// 使用普通帧截图时，必须要传截图间隔，除非只截一张
 	switch params.FrameType {
 	case 0: // 关键帧
@@ -60,15 +60,11 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 		lastFilter = selectFilter
 		outputOptions = append(outputOptions, output.VSync("vfr"))
 	case 1:
-		var interval int32
-		if interval == 0 {
-			interval = 1
-		} else {
-			interval = params.Interval
+		if params.Num != 1 {
+			fpsFilter := filter.FPS(nm.Gen(), math.Fraction(1, params.Interval))
+			filters = append(filters, fpsFilter)
+			lastFilter = fpsFilter
 		}
-		fpsFilter := filter.FPS(nm.Gen(), math.Fraction(1, interval))
-		filters = append(filters, fpsFilter)
-		lastFilter = fpsFilter
 	}
 	if params.Width > 0 || params.Height > 0 {
 		scaleFilter := filter.Scale(nm.Gen(), params.Width, params.Height).Use(lastFilter)
@@ -81,6 +77,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 	}
 	outputOptions = append(outputOptions,
 		output.Vframes(params.Num),
+		output.Format("image2"),
 		output.File(params.Outfile),
 	)
 

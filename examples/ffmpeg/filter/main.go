@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
@@ -11,6 +13,7 @@ import (
 
 func main() {
 	var (
+		ctx    = context.Background()
 		nm     = naming.New()
 		input1 = input.WithSimple("in.mp4")
 		input2 = input.WithTime(3, 5, "in2.mp4")
@@ -23,6 +26,7 @@ func main() {
 	ffmpeg.NewFFmpeg(
 		ffmpeg.Binary("/usr/local/bin/ffmpeg"),
 		ffmpeg.V(ffmpeg.LogLevelError),
+		ffmpeg.Dry(true),
 	).AddInput(
 		input1, input2,
 	).AddFilter(
@@ -30,10 +34,10 @@ func main() {
 	).AddOutput(
 		output.New(
 			output.Map(overlay1.Name(0)),
-			output.Map(filter.SelectStream(0, filter.StreamAudio, false)),
+			output.Map(filter.SelectStream(0, filter.StreamAudio, false).Name(0)),
 			output.VideoCodec(codec.X264),
 			output.AudioCodec(codec.Copy),
 			output.File("out.mp4"),
 		),
-	).DryRun()
+	).Run(ctx)
 }
