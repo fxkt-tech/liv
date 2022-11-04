@@ -84,7 +84,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		// 处理output
 		outputOpts := []output.OutputOption{
 			output.Map(lastFilter.Name(0)),
-			output.Map(filter.SelectStream(0, filter.StreamAudio, false).Name(0)),
+			output.Map("0:a?"),
 			output.VideoCodec(sub.Filters.Video.Codec),
 			output.AudioCodec(sub.Filters.Audio.Codec),
 			output.MovFlags("faststart"),
