@@ -72,7 +72,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 		lastFilter = scaleFilter
 	}
 
-	if lastFilter != nil {
+	if len(filters) > 0 {
 		outputOptions = append(outputOptions, output.Map(lastFilter.Name(0)))
 	}
 	outputOptions = append(outputOptions,
