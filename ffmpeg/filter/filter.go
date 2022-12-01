@@ -131,6 +131,14 @@ func Split(name string, n int) Filter {
 	}
 }
 
+func ASplit(name string, n int) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("asplit=%d", n),
+		counts:  n,
+	}
+}
+
 func Trim(name string, s, e float64) Filter {
 	var ps []string
 	if s != 0 {
