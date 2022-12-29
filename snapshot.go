@@ -125,7 +125,7 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 
 	inputs = append(inputs, input.WithSimple(params.Infile))
 
-	filterFPS := filter.FPS(nm.Gen(), math.Fraction(frames, int32(duration)))
+	filterFPS := filter.FPS(nm.Gen(), math.Fraction(frames, duration))
 	filterScale := filter.Scale(nm.Gen(), params.Width, params.Height).Use(filterFPS)
 	filterTile := filter.Tile(nm.Empty(), params.XLen, params.YLen).Use(filterScale)
 

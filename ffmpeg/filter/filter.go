@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fxkt-tech/liv/internal/math"
+	"golang.org/x/exp/constraints"
 )
 
 type Filter interface {
@@ -177,10 +178,10 @@ func Select(name, expr string) Filter {
 	}
 }
 
-func FPS(name string, fps *math.Rational[int32]) Filter {
+func FPS[N, D constraints.Integer | constraints.Float](name string, fps *math.Rational[N, D]) Filter {
 	return &CommonFilter{
 		name:    name,
-		content: fmt.Sprintf("fps=fps=%d/%d", fps.Num, fps.Den),
+		content: fmt.Sprintf("fps=fps=%v/%v", fps.Num, fps.Den),
 		counts:  1,
 	}
 }
