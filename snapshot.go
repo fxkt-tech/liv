@@ -107,14 +107,13 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 	if vstream == nil {
 		return errors.New("vstream is nil")
 	}
-	if vstream.NBFrames <= 0 || vstream.Duration <= 0 {
-		return fmt.Errorf("wrong NBFrames(%d) or Duration(%f)", vstream.NBFrames, vstream.Duration)
-	}
 	// 若视频实际帧数少于预期，则根据实际帧数生成雪碧图
-	if vstream.NBFrames < frames {
+	if vstream.NBFrames > 0 && vstream.NBFrames < frames {
 		frames = vstream.NBFrames
 	}
-	duration = vstream.Duration
+	if vstream.Duration > 0 {
+		duration = vstream.Duration
+	}
 
 	var (
 		nm            = naming.New()
