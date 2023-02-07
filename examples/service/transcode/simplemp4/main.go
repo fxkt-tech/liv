@@ -32,6 +32,8 @@ func main() {
 								Dx:   10,
 								Dy:   8,
 								Pos:  "TopRight",
+								LW:   0,
+								LH:   540,
 							},
 						},
 						Clip: &liv.Clip{
@@ -40,18 +42,18 @@ func main() {
 						},
 					},
 				},
-				{
-					Outfile: "out-simple-mp4-2.mp4",
-					Filters: &liv.Filters{
-						Video: &liv.Video{
-							Codec:  codec.X264,
-							Height: 720,
-						},
-						Audio: &liv.Audio{
-							Codec: codec.AAC,
-						},
-					},
-				},
+				// {
+				// 	Outfile: "out-simple-mp4-2.mp4",
+				// 	Filters: &liv.Filters{
+				// 		Video: &liv.Video{
+				// 			Codec:  codec.X264,
+				// 			Height: 720,
+				// 		},
+				// 		Audio: &liv.Audio{
+				// 			Codec: codec.AAC,
+				// 		},
+				// 	},
+				// },
 			},
 		}
 	)
@@ -59,6 +61,7 @@ func main() {
 	tc := liv.NewTranscode(
 		liv.FFmpegOptions(
 			ffmpeg.Binary("ffmpeg"),
+			ffmpeg.Debug(true),
 			// ffmpeg.Dry(true),
 		),
 	)

@@ -36,3 +36,10 @@ func (*TranscodeSpec) ConvertContainerSatified(params *ConvertContainerParams) e
 	}
 	return nil
 }
+
+func (*TranscodeSpec) SimpleHLSSatified(params *TranscodeSiimpleHLSParams) error {
+	if params == nil || params.Infile == "" || params.Outfile == "" {
+		return ErrParamsInvalid
+	}
+	return nil
+}

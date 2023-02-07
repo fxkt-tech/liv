@@ -106,6 +106,12 @@ func VSync(vsync string) OutputOption {
 	}
 }
 
+func GOP(g int32) OutputOption {
+	return func(o *Output) {
+		o.g = g
+	}
+}
+
 // hls
 
 func HLSSegmentType(value string) OutputOption {
@@ -158,6 +164,12 @@ func Vframes(vframes int32) OutputOption {
 	}
 }
 
+func KV(k, v string) OutputOption {
+	return func(o *Output) {
+		o.nonSupportArgs[k] = v
+	}
+}
+
 // Output is common output info.
 type Output struct {
 	maps                  []string // mean is -map.
@@ -174,6 +186,9 @@ type Output struct {
 	file                  string
 	var_stream_map        string
 	vsync                 string
+	g                     int32 // gop
+
+	nonSupportArgs map[string]string
 
 	// hls configs
 	hls_segment_type     string
@@ -196,6 +211,7 @@ func New(opts ...OutputOption) *Output {
 		// cv:                    codec.X264,
 		// ca:                    codec.Copy,
 		// hls_time:              2,
+		nonSupportArgs: make(map[string]string),
 	}
 	for _, o := range opts {
 		o(op)
@@ -232,6 +248,9 @@ func (o *Output) Params() (params []string) {
 			params = append(params, "-metadata", m)
 		}
 	}
+	for k, v := range o.nonSupportArgs {
+		params = append(params, "-"+k, v)
+	}
 	if o.var_stream_map != "" {
 		params = append(params, "-var_stream_map", o.var_stream_map)
 	}
@@ -250,7 +269,9 @@ func (o *Output) Params() (params []string) {
 		}
 		if o.hls_time > 0 {
 			params = append(params, "-hls_time", strconv.FormatInt(int64(o.hls_time), 10))
-			params = append(params, "-g", strconv.FormatInt(int64(o.hls_time), 10))
+			if o.g == 0 {
+				o.g = o.hls_time
+			}
 		}
 		if o.master_pl_name != "" {
 			params = append(params, "-master_pl_name", o.master_pl_name)
@@ -262,6 +283,9 @@ func (o *Output) Params() (params []string) {
 			params = append(params, "-hls_key_info_file", o.hls_key_info_file)
 		}
 		params = append(params, "-hls_list_size", "0")
+	}
+	if o.g > 0 {
+		params = append(params, "-g", strconv.FormatInt(int64(o.g), 10))
 	}
 	if o.threads != 0 {
 		params = append(params, "-threads", strconv.FormatInt(int64(o.threads), 10))

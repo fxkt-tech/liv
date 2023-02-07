@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
@@ -17,18 +16,18 @@ func main() {
 		ctx = context.Background()
 		nm  = naming.New()
 
-		input1 = input.WithSimple("in2.mp4")
+		input1         = input.WithSimple("in.mp4")
+		hlsKeyInfoFile = "hls/file.keyinfo"
 
-		scale1 = filter.Scale(nm.Gen(), -2, -2).
-			Use(filter.SelectStream(0, filter.StreamVideo, true))
+		scale1 = filter.Scale(nm.Gen(), -2, -2).Use(filter.SelectStream(0, filter.StreamVideo, true))
 
-		outfolder = "outputs/"
+		outfolder = "video/"
 
-		mainFile = outfolder + "index.m3u8"
-		segFile  = outfolder + "seg%5d.ts"
+		mainFile = outfolder + "m.m3u8"
+		segFile  = outfolder + "m-%5d.ts"
 	)
 
-	err := ffmpeg.NewFFmpeg(
+	ffmpeg.NewFFmpeg(
 		ffmpeg.V(ffmpeg.LogLevelError),
 		ffmpeg.Debug(true),
 		// ffmpeg.Dry(true),
@@ -40,22 +39,17 @@ func main() {
 		output.New(
 			output.Map(scale1.Name(0)),
 			output.Map("0:a?"),
-			output.Crf(28),
 			output.VideoCodec(codec.X264),
 			output.AudioCodec(codec.Copy),
-			output.KV("sc_threshold", "0"),
 			output.File(mainFile),
 			output.MovFlags("faststart"),
-			output.GOP(250),
 			output.HLSSegmentType("mpegts"),
 			output.HLSFlags("independent_segments"),
 			output.HLSPlaylistType("vod"),
-			output.HLSTime(10),
+			output.HLSTime(2),
+			output.HLSKeyInfoFile(hlsKeyInfoFile), // 加密
 			output.HLSSegmentFilename(segFile),
 			output.Format(codec.HLS),
 		),
 	).Run(ctx)
-	if err != nil {
-		fmt.Println(err)
-	}
 }

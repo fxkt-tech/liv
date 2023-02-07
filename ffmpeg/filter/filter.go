@@ -51,7 +51,9 @@ func (cf *CommonFilter) Copy(index int) Filter {
 func (cf *CommonFilter) String() string {
 	fls := make([]string, len(cf.uses))
 	for i, fl := range cf.uses {
-		fls[i] = fl.Name(fl.Index())
+		if fl != nil {
+			fls[i] = fl.Name(fl.Index())
+		}
 	}
 	var names []string
 	for i := 0; i < cf.counts; i++ {

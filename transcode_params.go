@@ -16,6 +16,13 @@ type SubTranscodeParams struct {
 	Threads int32
 }
 
+type TranscodeSiimpleHLSParams struct {
+	Infile  string
+	Outfile string
+	Filters *Filters
+	Threads int32
+}
+
 type Filters struct {
 	Container string    `json:"container,omitempty"`
 	Video     *Video    `json:"video,omitempty"`
@@ -34,6 +41,7 @@ type Video struct {
 	Crf       int32   `json:"crf,omitempty"`
 	WZQuality float32 `json:"wz_quality,omitempty"`
 	Bitrate   int32   `json:"bitrate,omitempty"`
+	GOP       int32   `json:"gop,omitempty"`
 }
 
 type Audio struct {
@@ -48,6 +56,10 @@ type Logo struct {
 	Dy   float64 `json:"dy,omitempty"`
 	LW   float64 `json:"lw,omitempty"`
 	LH   float64 `json:"lh,omitempty"`
+}
+
+func (l *Logo) NeedScale() bool {
+	return l.LW > 0 || l.LH > 0
 }
 
 // 矩形框
