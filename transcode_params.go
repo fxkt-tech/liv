@@ -16,7 +16,7 @@ type SubTranscodeParams struct {
 	Threads int32
 }
 
-type TranscodeSiimpleHLSParams struct {
+type TranscodeSimpleHLSParams struct {
 	Infile  string
 	Outfile string
 	Filters *Filters

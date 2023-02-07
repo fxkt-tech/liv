@@ -274,7 +274,7 @@ func (tc *Transcode) ConvertContainer(ctx context.Context, params *ConvertContai
 		Run(ctx)
 }
 
-func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSiimpleHLSParams) error {
+func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSParams) error {
 	err := tc.spec.SimpleHLSSatified(params)
 	if err != nil {
 		return err

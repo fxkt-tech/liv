@@ -12,7 +12,7 @@ import (
 func main() {
 	var (
 		ctx    = context.Background()
-		params = &liv.TranscodeSiimpleHLSParams{
+		params = &liv.TranscodeSimpleHLSParams{
 			Infile:  "../../../testdata/in.mp4",
 			Outfile: "out-simple-hls.m3u8",
 			Filters: &liv.Filters{
