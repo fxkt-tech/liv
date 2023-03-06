@@ -55,10 +55,10 @@ func WithTime(ss, t float64, i string) *Input {
 
 func (i *Input) Params() (params []string) {
 	if i.ss != 0 {
-		params = append(params, "-ss", fmt.Sprintf("%.2f", i.ss))
+		params = append(params, "-ss", fmt.Sprintf("%.6f", i.ss))
 	}
 	if i.t != 0 {
-		params = append(params, "-t", fmt.Sprintf("%.2f", i.t))
+		params = append(params, "-t", fmt.Sprintf("%.6f", i.t))
 	}
 	params = append(params, "-i", i.i)
 	return

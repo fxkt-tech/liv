@@ -16,6 +16,13 @@ type SubTranscodeParams struct {
 	Threads int32
 }
 
+type TranscodeSimpleTSParams struct {
+	Infile  string
+	Outfile string
+	Filters *Filters
+	Threads int32
+}
+
 type TranscodeSimpleHLSParams struct {
 	Infile  string
 	Outfile string
@@ -42,6 +49,8 @@ type Video struct {
 	WZQuality float32 `json:"wz_quality,omitempty"`
 	Bitrate   int32   `json:"bitrate,omitempty"`
 	GOP       int32   `json:"gop,omitempty"`
+	PTS       string  `json:"pts,omitempty"`
+	APTS      string  `json:"apts,omitempty"`
 }
 
 type Audio struct {

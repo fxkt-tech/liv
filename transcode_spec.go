@@ -43,3 +43,11 @@ func (*TranscodeSpec) SimpleHLSSatified(params *TranscodeSimpleHLSParams) error 
 	}
 	return nil
 }
+
+func (*TranscodeSpec) SimpleTSSatified(params *TranscodeSimpleTSParams) error {
+	if params == nil || params.Infile == "" || params.Outfile == "" {
+		return ErrParamsInvalid
+	}
+
+	return nil
+}

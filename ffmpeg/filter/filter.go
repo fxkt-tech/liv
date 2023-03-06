@@ -126,6 +126,22 @@ func Scale(name string, w, h int32) Filter {
 	}
 }
 
+func SetPTS(name string, expr string) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("setpts=%s", expr),
+		counts:  1,
+	}
+}
+
+func ASetPTS(name string, expr string) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("asetpts=%s", expr),
+		counts:  1,
+	}
+}
+
 func Split(name string, n int) Filter {
 	return &CommonFilter{
 		name:    name,

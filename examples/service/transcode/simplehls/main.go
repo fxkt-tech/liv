@@ -14,7 +14,7 @@ func main() {
 		ctx    = context.Background()
 		params = &liv.TranscodeSimpleHLSParams{
 			Infile:  "../../../testdata/in.mp4",
-			Outfile: "out-simple-hls.m3u8",
+			Outfile: "index.m3u8",
 			Filters: &liv.Filters{
 				Container: codec.MP4,
 				HLS: &liv.HLS{
@@ -30,16 +30,16 @@ func main() {
 				Audio: &liv.Audio{
 					Codec: codec.AAC,
 				},
-				Logo: []*liv.Logo{
-					{
-						File: "../../../testdata/logo.png",
-						Dx:   10,
-						Dy:   8,
-						Pos:  "TopRight",
-						LW:   0,
-						LH:   540,
-					},
-				},
+				// Logo: []*liv.Logo{
+				// 	{
+				// 		File: "../../../testdata/logo.png",
+				// 		Dx:   10,
+				// 		Dy:   8,
+				// 		Pos:  "TopRight",
+				// 		LW:   0,
+				// 		LH:   540,
+				// 	},
+				// },
 				// Clip: &liv.Clip{
 				// 	Seek:     5,
 				// 	Duration: 10,
