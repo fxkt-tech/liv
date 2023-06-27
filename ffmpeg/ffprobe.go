@@ -78,6 +78,25 @@ func (ff *FFprobe) Run(ctx context.Context) error {
 	return nil
 }
 
+func (ff *FFprobe) RunRetRaw(ctx context.Context) ([]byte, error) {
+	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
+	ff.Sentence = cc.String()
+	retbytes, err := cc.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	probe := &Probe{}
+	err = json.Unmarshal(retbytes, probe)
+	if err != nil {
+		return nil, err
+	}
+	if string(retbytes) == "{}" {
+		return nil, errors.New("file is not a media stream")
+	}
+	ff.probe = probe
+	return retbytes, nil
+}
+
 func (ff *FFprobe) GetFirstVideoStream() *ProbeStream {
 	if ff.probe == nil {
 		return nil
