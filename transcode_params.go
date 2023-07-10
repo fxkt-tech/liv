@@ -32,12 +32,18 @@ type TranscodeSimpleHLSParams struct {
 
 type Filters struct {
 	Container string    `json:"container,omitempty"`
+	Metadata  []*KV     `json:"metadata,omitempty"`
 	Video     *Video    `json:"video,omitempty"`
 	Audio     *Audio    `json:"audio,omitempty"`
 	Logo      []*Logo   `json:"logo,omitempty"`
 	Delogo    []*Delogo `json:"delogo,omitempty"`
 	Clip      *Clip     `json:"clip,omitempty"`
 	HLS       *HLS      `json:"hls,omitempty"`
+}
+
+type KV struct {
+	K string `json:"k,omitempty"`
+	V string `json:"v,omitempty"`
 }
 
 type Video struct {

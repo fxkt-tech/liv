@@ -108,6 +108,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 			output.MaxMuxingQueueSize(4086),
 			output.File(sub.Outfile),
 		}
+		outputOpts = append(outputOpts, metadataOutputOptionFromKV(sub.Filters.Metadata)...)
 
 		// 处理在每一路输出流的裁剪
 		if sub.Filters.Clip != nil {
@@ -125,6 +126,14 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		AddFilter(filters...).
 		AddOutput(outputs...).
 		Run(ctx)
+}
+
+func metadataOutputOptionFromKV(kvs []*KV) []output.OutputOption {
+	oos := make([]output.OutputOption, len(kvs))
+	for i, kv := range kvs {
+		oos[i] = output.Metadata(kv.K, kv.V)
+	}
+	return oos
 }
 
 func (tc *Transcode) SimpleMP3(ctx context.Context, params *TranscodeParams) error {
