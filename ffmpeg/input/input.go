@@ -3,6 +3,8 @@ package input
 import (
 	"fmt"
 	"strings"
+
+	"github.com/fxkt-tech/liv/ffmpeg/model"
 )
 
 type InputOption func(*Input)
@@ -27,9 +29,10 @@ func Duration(t float64) InputOption {
 
 // Input is common input info.
 type Input struct {
-	i  string  // i is input file.
-	ss float64 // ss is start_time.
-	t  float64 // t is duration.
+	i        string  // i is input file.
+	ss       float64 // ss is start_time.
+	t        float64 // t is duration.
+	metadata []*model.KV
 	// ext []string // extra params.
 }
 
@@ -43,6 +46,10 @@ func New(opts ...InputOption) *Input {
 
 func WithSimple(i string) *Input {
 	return &Input{i: i}
+}
+
+func WithMetadata(i string, kvs []*model.KV) *Input {
+	return &Input{i: i, metadata: kvs}
 }
 
 func WithTime(ss, t float64, i string) *Input {
@@ -61,6 +68,9 @@ func (i *Input) Params() (params []string) {
 		params = append(params, "-t", fmt.Sprintf("%.6f", i.t))
 	}
 	params = append(params, "-i", i.i)
+	for _, m := range i.metadata {
+		params = append(params, "-metadata", fmt.Sprintf("%s=%s", m.K, m.V))
+	}
 	return
 }
 
