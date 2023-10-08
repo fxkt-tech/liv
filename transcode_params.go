@@ -30,6 +30,19 @@ type TranscodeSimpleHLSParams struct {
 	Threads int32
 }
 
+type ExtractAudioParams struct {
+	Infile  string
+	Outfile string
+}
+
+type MergeParams struct {
+	FramesInfile string
+	VideoInfile  string
+	AudioInfile  string
+	Filters      *Filters
+	Outfile      string
+}
+
 type Filters struct {
 	Container string    `json:"container,omitempty"`
 	Metadata  []*KV     `json:"metadata,omitempty"`
@@ -51,6 +64,7 @@ type Video struct {
 	Width     int32   `json:"width,omitempty"`
 	Height    int32   `json:"height,omitempty"`
 	Short     int32   `json:"short,omitempty"`
+	FPS       string  `json:"fps,omitempty"`
 	Crf       int32   `json:"crf,omitempty"`
 	WZQuality float32 `json:"wz_quality,omitempty"`
 	Bitrate   int32   `json:"bitrate,omitempty"`

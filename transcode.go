@@ -497,3 +497,69 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		AddOutput(outputs...).
 		Run(ctx)
 }
+
+// ffmpeg -i in.mp4 -vn -c:a copy out.aac
+func (tc *Transcode) ExtractAudio(ctx context.Context, params *ExtractAudioParams) error {
+	err := tc.spec.ExtractAudioSatified(params)
+	if err != nil {
+		return err
+	}
+
+	var (
+		inputs  input.Inputs
+		outputs output.Outputs
+	)
+
+	// 处理input
+	inputs = append(inputs, input.WithSimple(params.Infile))
+
+	// 处理output
+	outputOpts := []output.OutputOption{
+		output.AudioCodec(codec.Copy),
+		output.VideoCodec(codec.Nop),
+		output.File(params.Outfile),
+	}
+
+	outputs = append(outputs, output.New(outputOpts...))
+
+	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+		AddInput(inputs...).
+		AddOutput(outputs...).
+		Run(ctx)
+}
+
+// ffmpeg -i in.mp4 -vn -c:a copy out.aac
+func (tc *Transcode) MergeByFrames(ctx context.Context, params *MergeParams) error {
+	err := tc.spec.MergeByFramesSatified(params)
+	if err != nil {
+		return err
+	}
+
+	var (
+		inputs  input.Inputs
+		outputs output.Outputs
+	)
+
+	// 处理input
+	inputs = append(inputs,
+		input.WithSimple(params.FramesInfile),
+		input.WithSimple(params.AudioInfile),
+	)
+
+	// 处理output
+	outputOpts := []output.OutputOption{
+		output.AudioCodec(codec.Copy),
+		output.VideoCodec(params.Filters.Video.Codec),
+		output.AudioCodec(params.Filters.Audio.Codec),
+		output.MovFlags("faststart"),
+		output.MaxMuxingQueueSize(4086),
+		output.File(params.Outfile),
+	}
+
+	outputs = append(outputs, output.New(outputOpts...))
+
+	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+		AddInput(inputs...).
+		AddOutput(outputs...).
+		Run(ctx)
+}

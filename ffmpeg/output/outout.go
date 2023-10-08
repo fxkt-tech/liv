@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/fxkt-tech/liv/ffmpeg/codec"
 )
 
 type OutputOption func(*Output)
@@ -226,7 +228,11 @@ func (o *Output) Params() (params []string) {
 		}
 	}
 	if o.cv != "" {
-		params = append(params, "-c:v", o.cv)
+		if o.cv != codec.Nop {
+			params = append(params, "-c:v", o.cv)
+		} else {
+			params = append(params, "-vn")
+		}
 	}
 	if o.ca != "" {
 		params = append(params, "-c:a", o.ca)

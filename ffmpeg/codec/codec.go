@@ -2,6 +2,7 @@ package codec
 
 const (
 	Copy = "copy"
+	Nop  = "nop"
 
 	// audio
 	AAC    = "aac"

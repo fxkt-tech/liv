@@ -51,3 +51,21 @@ func (*TranscodeSpec) SimpleTSSatified(params *TranscodeSimpleTSParams) error {
 
 	return nil
 }
+
+func (*TranscodeSpec) ExtractAudioSatified(params *ExtractAudioParams) error {
+	if params == nil || params.Infile == "" || params.Outfile == "" {
+		return ErrParamsInvalid
+	}
+
+	return nil
+}
+
+func (*TranscodeSpec) MergeByFramesSatified(params *MergeParams) error {
+	if params == nil ||
+		params.FramesInfile == "" ||
+		params.AudioInfile == "" ||
+		params.Outfile == "" {
+		return ErrParamsInvalid
+	}
+	return nil
+}
