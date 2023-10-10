@@ -197,9 +197,15 @@ func Select(name, expr string) Filter {
 }
 
 func FPS[N, D constraints.Integer | constraints.Float](name string, fps *math.Rational[N, D]) Filter {
+	var s string
+	if fps.Den == 0 {
+		s = "source_fps"
+	} else {
+		s = fmt.Sprintf("%v/%v", fps.Num, fps.Den)
+	}
 	return &CommonFilter{
 		name:    name,
-		content: fmt.Sprintf("fps=fps=%v/%v", fps.Num, fps.Den),
+		content: fmt.Sprintf("fps=fps=%s", s),
 		counts:  1,
 	}
 }
