@@ -71,6 +71,7 @@ type Video struct {
 	GOP       int32   `json:"gop,omitempty"`
 	PTS       string  `json:"pts,omitempty"`
 	APTS      string  `json:"apts,omitempty"`
+	PixFmt    string  `json:"pix_fmt,omitempty"`
 }
 
 type Audio struct {

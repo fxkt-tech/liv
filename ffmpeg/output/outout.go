@@ -54,6 +54,12 @@ func VideoBitrate(bv int32) OutputOption {
 	}
 }
 
+func PixFmt(pixFmt string) OutputOption {
+	return func(o *Output) {
+		o.pix_fmt = pixFmt
+	}
+}
+
 func Crf(crf int32) OutputOption {
 	return func(o *Output) {
 		o.crf = crf
@@ -177,6 +183,7 @@ type Output struct {
 	maps                  []string // mean is -map.
 	cv, ca                string   // cv is c:v, ca is c:a.
 	bv, ba                int32    // bv is b:v, ba is b:a.
+	pix_fmt               string
 	crf                   int32
 	metadatas             []string // mean is -metadata.
 	threads               int32    // thread counts, default 4.
@@ -242,6 +249,9 @@ func (o *Output) Params() (params []string) {
 	}
 	if o.ba != 0 {
 		params = append(params, "-b:a", strconv.FormatInt(int64(o.ba), 10))
+	}
+	if o.pix_fmt != "" {
+		params = append(params, "-pix_fmt", o.pix_fmt)
 	}
 	if o.crf != 0 {
 		params = append(params, "-crf", strconv.FormatInt(int64(o.crf), 10))

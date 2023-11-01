@@ -551,6 +551,8 @@ func (tc *Transcode) MergeByFrames(ctx context.Context, params *MergeParams) err
 		output.AudioCodec(codec.Copy),
 		output.VideoCodec(params.Filters.Video.Codec),
 		output.AudioCodec(params.Filters.Audio.Codec),
+		output.PixFmt(params.Filters.Video.PixFmt),
+		output.Crf(params.Filters.Video.Crf),
 		output.MovFlags("faststart"),
 		output.MaxMuxingQueueSize(4086),
 		output.File(params.Outfile),
