@@ -25,8 +25,15 @@ func Duration(t float64) InputOption {
 	}
 }
 
+func FPS(fps string) InputOption {
+	return func(i *Input) {
+		i.r = fps
+	}
+}
+
 // Input is common input info.
 type Input struct {
+	r        string
 	i        string   // i is input file.
 	ss       float64  // ss is start_time.
 	t        float64  // t is duration.
@@ -59,6 +66,9 @@ func WithTime(ss, t float64, i string) *Input {
 }
 
 func (i *Input) Params() (params []string) {
+	if i.r != "" {
+		params = append(params, "-r", i.r)
+	}
 	if i.ss != 0 {
 		params = append(params, "-ss", fmt.Sprintf("%.6f", i.ss))
 	}

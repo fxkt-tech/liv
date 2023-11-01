@@ -542,7 +542,7 @@ func (tc *Transcode) MergeByFrames(ctx context.Context, params *MergeParams) err
 
 	// 处理input
 	inputs = append(inputs,
-		input.WithSimple(params.FramesInfile),
+		input.New(input.FPS(params.Filters.Video.FPS), input.I(params.FramesInfile)),
 		input.WithSimple(params.AudioInfile),
 	)
 
