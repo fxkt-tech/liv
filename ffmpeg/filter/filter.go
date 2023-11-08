@@ -126,6 +126,17 @@ func Scale(name string, w, h int32) Filter {
 	}
 }
 
+func Crop(name string, x, y, w, h int32) Filter {
+	return &CommonFilter{
+		name: name,
+		content: fmt.Sprintf(
+			"crop=%d:%d:%d:%d",
+			x, y, w, h,
+		),
+		counts: 1,
+	}
+}
+
 func SetPTS(name string, expr string) Filter {
 	return &CommonFilter{
 		name:    name,
