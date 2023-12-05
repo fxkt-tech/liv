@@ -13,6 +13,12 @@ func I(i string) InputOption {
 	}
 }
 
+func VideoCodec(cv string) InputOption {
+	return func(o *Input) {
+		o.cv = cv
+	}
+}
+
 func StartTime(ss float64) InputOption {
 	return func(o *Input) {
 		o.ss = ss
@@ -31,13 +37,22 @@ func FPS(fps string) InputOption {
 	}
 }
 
+func Format(f string) InputOption {
+	return func(i *Input) {
+		i.f = f
+	}
+}
+
 // Input is common input info.
 type Input struct {
+	cv       string
 	r        string
+	safe     string
 	i        string   // i is input file.
 	ss       float64  // ss is start_time.
 	t        float64  // t is duration.
 	metadata []string // kv pair.
+	f        string   // format
 	// ext []string // extra params.
 }
 
@@ -69,11 +84,20 @@ func (i *Input) Params() (params []string) {
 	if i.r != "" {
 		params = append(params, "-r", i.r)
 	}
+	if i.cv != "" {
+		params = append(params, "-c:v", i.cv)
+	}
+	if i.safe != "" {
+		params = append(params, "-safe", i.safe)
+	}
 	if i.ss != 0 {
 		params = append(params, "-ss", fmt.Sprintf("%.6f", i.ss))
 	}
 	if i.t != 0 {
 		params = append(params, "-t", fmt.Sprintf("%.6f", i.t))
+	}
+	if i.f != "" {
+		params = append(params, "-f", i.f)
 	}
 	params = append(params, "-i", i.i)
 	for j := 0; j < len(i.metadata); j += 2 {

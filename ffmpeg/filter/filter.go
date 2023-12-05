@@ -115,14 +115,26 @@ func Logo(name string, dx, dy int64, pos LogoPos) Filter {
 	}
 }
 
-func Scale(name string, w, h int32) Filter {
+func OverlayWithEnable[T int32 | int | string](name string, dx, dy T, enable string) Filter {
 	return &CommonFilter{
-		name: name,
-		content: fmt.Sprintf("scale=%d:%d",
-			math.CeilOddInt32(w),
-			math.CeilOddInt32(h),
-		),
-		counts: 1,
+		name:    name,
+		content: fmt.Sprintf("overlay=%v:%v:enable='%s'", dx, dy, enable),
+		counts:  1,
+	}
+}
+
+func Scale[T int32 | int | string](name string, w, h T) Filter {
+	var ww, hh any = w, h
+	switch ww.(type) {
+	case int32, int:
+		ww, hh = math.CeilOddInt32(ww.(int32)), math.CeilOddInt32(hh.(int32))
+	case string:
+		ww, hh = w, h
+	}
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("scale=%v:%v", ww, hh),
+		counts:  1,
 	}
 }
 
@@ -225,6 +237,30 @@ func Tile(name string, xlen, ylen int32) Filter {
 	return &CommonFilter{
 		name:    name,
 		content: fmt.Sprintf("tile=%d*%d", xlen, ylen),
+		counts:  1,
+	}
+}
+
+func AMix(name string, inputs int32) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("amix=inputs=%d", inputs),
+		counts:  1,
+	}
+}
+
+func Loudnorm(name string, i, tp int32) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("loudnorm=I=%d:TP=%d", i, tp),
+		counts:  1,
+	}
+}
+
+func ADelay(name string, delays int32) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("adelay=delays=%ds:all=1", delays),
 		counts:  1,
 	}
 }
