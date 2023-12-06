@@ -43,6 +43,12 @@ func Format(f string) InputOption {
 	}
 }
 
+func Safe(safe string) InputOption {
+	return func(i *Input) {
+		i.safe = safe
+	}
+}
+
 // Input is common input info.
 type Input struct {
 	cv       string
