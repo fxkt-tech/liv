@@ -52,6 +52,14 @@ func (*TranscodeSpec) SimpleTSSatified(params *TranscodeSimpleTSParams) error {
 	return nil
 }
 
+func (*TranscodeSpec) ConcatSatified(params *ConcatParams) error {
+	if params == nil || len(params.Infiles) == 0 || params.Outfile == "" {
+		return ErrParamsInvalid
+	}
+
+	return nil
+}
+
 func (*TranscodeSpec) ExtractAudioSatified(params *ExtractAudioParams) error {
 	if params == nil || params.Infile == "" || params.Outfile == "" {
 		return ErrParamsInvalid

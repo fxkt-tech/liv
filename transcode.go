@@ -3,6 +3,8 @@ package liv
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
@@ -11,6 +13,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/util"
+	"github.com/fxkt-tech/liv/internal/sugar"
 )
 
 type Transcode struct {
@@ -284,6 +287,7 @@ func (tc *Transcode) ConvertContainer(ctx context.Context, params *ConvertContai
 		Run(ctx)
 }
 
+// 转hls
 func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSParams) error {
 	err := tc.spec.SimpleHLSSatified(params)
 	if err != nil {
@@ -385,6 +389,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 		Run(ctx)
 }
 
+// 转ts
 func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSParams) error {
 	err := tc.spec.SimpleTSSatified(params)
 	if err != nil {
@@ -496,6 +501,43 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		AddFilter(filters...).
 		AddOutput(outputs...).
 		Run(ctx)
+}
+
+func concatFile(files []string, localPath string) error {
+	f, err := os.Create(localPath)
+	if err != nil {
+		return err
+	}
+	files = sugar.Range(files, func(f string) string { return fmt.Sprintf("file %s", f) })
+	fs := strings.Join(files, "\n")
+	_, err = f.Write([]byte(fs))
+	return err
+}
+
+// 多个视频合并成一个
+func (tc *Transcode) Concat(ctx context.Context, params *ConcatParams) error {
+	err := tc.spec.ConcatSatified(params)
+	if err != nil {
+		return err
+	}
+
+	err = concatFile(params.Infiles, params.ConcatFile)
+	if err != nil {
+		return err
+	}
+
+	return ffmpeg.NewFFmpeg(
+		ffmpeg.Debug(true),
+	).AddInput(
+		input.WithConcat(params.ConcatFile),
+	).AddOutput(
+		output.New(
+			output.VideoCodec(codec.Copy),
+			output.AudioCodec(codec.Copy),
+			output.Duration(params.Duration),
+			output.File(params.Outfile),
+		),
+	).Run(ctx)
 }
 
 // ffmpeg -i in.mp4 -vn -c:a copy out.aac

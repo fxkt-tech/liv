@@ -30,6 +30,13 @@ type TranscodeSimpleHLSParams struct {
 	Threads int32
 }
 
+type ConcatParams struct {
+	Infiles    []string
+	ConcatFile string // eg. mylist.txt
+	Outfile    string
+	Duration   float64
+}
+
 type ExtractAudioParams struct {
 	Infile  string
 	Outfile string
