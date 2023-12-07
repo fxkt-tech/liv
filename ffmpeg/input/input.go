@@ -74,6 +74,10 @@ func WithSimple(i string) *Input {
 	return &Input{i: i}
 }
 
+func WithConcat(i string) *Input {
+	return &Input{i: i, f: "concat", safe: "0"}
+}
+
 func WithMetadata(i string, kvs []string) *Input {
 	return &Input{i: i, metadata: kvs}
 }
