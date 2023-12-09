@@ -1,4 +1,4 @@
-package ffmpeg_test
+package ffprobe_test
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fxkt-tech/liv/ffmpeg"
+	"github.com/fxkt-tech/liv/ffprobe"
 )
 
 func TestProbeRunRaw(t *testing.T) {
 	ctx := context.Background()
 
 	path := "/Users/justyer/Downloads/shot.mp4"
-	probe := ffmpeg.NewProbe().Input(path)
+	probe := ffprobe.New().Input(path)
 	raw, err := probe.RunRetRaw(ctx)
 	if err != nil {
 		t.Fatal(err)

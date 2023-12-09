@@ -12,33 +12,33 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 )
 
-type FFmpegOption func(*FFmpeg)
+type Option func(*FFmpeg)
 
-func Binary(bin string) FFmpegOption {
+func Binary(bin string) Option {
 	return func(fm *FFmpeg) {
 		fm.bin = bin
 	}
 }
 
-func Debug(debug bool) FFmpegOption {
+func Debug(debug bool) Option {
 	return func(fm *FFmpeg) {
 		fm.debug = debug
 	}
 }
 
-func Yes(y bool) FFmpegOption {
+func Yes(y bool) Option {
 	return func(fm *FFmpeg) {
 		fm.y = y
 	}
 }
 
-func V(v LogLevel) FFmpegOption {
+func V(v LogLevel) Option {
 	return func(fm *FFmpeg) {
 		fm.v = v
 	}
 }
 
-func Dry(dry bool) FFmpegOption {
+func Dry(dry bool) Option {
 	return func(f *FFmpeg) {
 		f.dry = dry
 	}
@@ -62,7 +62,7 @@ type Generater interface {
 	String() string
 }
 
-func NewFFmpeg(opts ...FFmpegOption) *FFmpeg {
+func NewFFmpeg(opts ...Option) *FFmpeg {
 	fm := &FFmpeg{
 		bin: "ffmpeg",
 		y:   true,

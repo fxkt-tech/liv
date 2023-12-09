@@ -1,4 +1,4 @@
-package ffmpeg
+package ffprobe
 
 type Probe struct {
 	Streams []*ProbeStream `json:"streams,omitempty"`

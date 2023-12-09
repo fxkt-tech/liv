@@ -1,23 +1,37 @@
-package ffmpeg
+package ffprobe
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os/exec"
+	"strings"
+
+	"github.com/fxkt-tech/liv/ffmpeg"
 )
 
-type FFprobeOption func(*FFprobe)
+type Option func(*FFprobe)
 
-func ProbeBinary(bin string) FFprobeOption {
+func ProbeBinary(bin string) Option {
 	return func(f *FFprobe) {
 		f.bin = bin
 	}
 }
 
+func ProbeDebug(debug bool) Option {
+	return func(f *FFprobe) {
+		f.debug = debug
+	}
+}
+
 type FFprobe struct {
+	dry bool // dry run
+
+	debug bool
+
 	bin          string
-	v            LogLevel // loglevel
+	v            ffmpeg.LogLevel // loglevel
 	print_format string
 	show_format  bool
 	show_streams bool
@@ -27,10 +41,10 @@ type FFprobe struct {
 	Sentence string
 }
 
-func NewProbe(opts ...FFprobeOption) *FFprobe {
+func New(opts ...Option) *FFprobe {
 	f := &FFprobe{
 		bin:          "ffprobe",
-		v:            LogLevelQuiet,
+		v:            ffmpeg.LogLevelQuiet,
 		print_format: "json",
 		show_format:  true,
 		show_streams: true,
@@ -59,7 +73,23 @@ func (ff *FFprobe) Input(input string) *FFprobe {
 	return ff
 }
 
+func (ff *FFprobe) DryRun() {
+	var ps []string
+	ps = append(ps, ff.bin)
+	ps = append(ps, ff.Params()...)
+	fmt.Println(strings.Join(ps, " "))
+}
+
 func (ff *FFprobe) Run(ctx context.Context) error {
+	if ff.debug {
+		ff.DryRun()
+	} else {
+		if ff.dry {
+			ff.DryRun()
+			return nil
+		}
+	}
+
 	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
 	ff.Sentence = cc.String()
 	retbytes, err := cc.CombinedOutput()

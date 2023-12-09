@@ -15,6 +15,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/ffprobe"
 	"github.com/fxkt-tech/liv/internal/math"
 )
 
@@ -95,7 +96,7 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 	)
 
 	// 获取视频信息
-	ffp := ffmpeg.NewProbe(ss.ffprobeOpts...).
+	ffp := ffprobe.New(ss.ffprobeOpts...).
 		Input(params.Infile)
 	err := ffp.Run(ctx)
 	if err != nil {
@@ -160,7 +161,7 @@ func (ss *Snapshot) SVGMark(ctx context.Context, params *SVGMarkParams) error {
 		return err
 	}
 
-	ffp := ffmpeg.NewProbe(ss.ffprobeOpts...).Input(snapshotlocalfile)
+	ffp := ffprobe.New(ss.ffprobeOpts...).Input(snapshotlocalfile)
 	err = ffp.Run(ctx)
 	if err != nil {
 		return err
