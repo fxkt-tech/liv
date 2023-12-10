@@ -13,13 +13,13 @@ import (
 
 type Option func(*FFprobe)
 
-func ProbeBinary(bin string) Option {
+func Binary(bin string) Option {
 	return func(f *FFprobe) {
 		f.bin = bin
 	}
 }
 
-func ProbeDebug(debug bool) Option {
+func Debug(debug bool) Option {
 	return func(f *FFprobe) {
 		f.debug = debug
 	}
