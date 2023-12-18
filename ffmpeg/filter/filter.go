@@ -115,6 +115,14 @@ func Logo(name string, dx, dy int64, pos LogoPos) Filter {
 	}
 }
 
+func Overlay[T int32 | int | string](name string, dx, dy T) Filter {
+	return &CommonFilter{
+		name:    name,
+		content: fmt.Sprintf("overlay=%v:%v", dx, dy),
+		counts:  1,
+	}
+}
+
 func OverlayWithEnable[T int32 | int | string](name string, dx, dy T, enable string) Filter {
 	return &CommonFilter{
 		name:    name,
@@ -135,6 +143,17 @@ func Scale[T int32 | int | string](name string, w, h T) Filter {
 		name:    name,
 		content: fmt.Sprintf("scale=%v:%v", ww, hh),
 		counts:  1,
+	}
+}
+
+func Color(name string, c string, w, h int32, d float32) Filter {
+	return &CommonFilter{
+		name: name,
+		content: fmt.Sprintf(
+			"color=c=%s:s=%d*%d:d=%.2f",
+			c, w, h, d,
+		),
+		counts: 1,
 	}
 }
 
