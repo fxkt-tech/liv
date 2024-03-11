@@ -242,7 +242,11 @@ func (o *Output) Params() (params []string) {
 		}
 	}
 	if o.ca != "" {
-		params = append(params, "-c:a", o.ca)
+		if o.ca != codec.Nop {
+			params = append(params, "-c:a", o.ca)
+		} else {
+			params = append(params, "-an")
+		}
 	}
 	if o.bv != 0 {
 		params = append(params, "-b:v", strconv.FormatInt(int64(o.bv), 10))
