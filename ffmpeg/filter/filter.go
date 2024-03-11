@@ -146,6 +146,17 @@ func Scale[T int32 | int | string](name string, w, h T) Filter {
 	}
 }
 
+func Chromakey(name string, color string, similarity, blend float32) Filter {
+	return &CommonFilter{
+		name: name,
+		content: fmt.Sprintf(
+			"chromakey=%s:%.2f:%.2f",
+			color, similarity, blend,
+		),
+		counts: 1,
+	}
+}
+
 func Color(name string, c string, w, h int32, d float32) Filter {
 	return &CommonFilter{
 		name: name,
