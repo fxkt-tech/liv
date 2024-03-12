@@ -62,7 +62,7 @@ type Generater interface {
 	String() string
 }
 
-func NewFFmpeg(opts ...Option) *FFmpeg {
+func New(opts ...Option) *FFmpeg {
 	fm := &FFmpeg{
 		bin: "ffmpeg",
 		y:   true,

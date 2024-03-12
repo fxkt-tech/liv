@@ -23,7 +23,7 @@ func main() {
 		// overlay1 = filter.Logo(nm.Gen(), 10, 10, filter.LogoTopRight).Use(scale1, split1)
 	)
 
-	ffmpeg.NewFFmpeg(
+	ffmpeg.New(
 		// ffmpeg.Binary("/usr/local/bin/ffmpeg"),
 		// ffmpeg.V(ffmpeg.LogLevelError),
 		ffmpeg.V(""),

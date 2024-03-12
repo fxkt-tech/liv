@@ -27,7 +27,7 @@ func main() {
 		segFile  = outfolder + "m-%5d.ts"
 	)
 
-	ffmpeg.NewFFmpeg(
+	ffmpeg.New(
 		ffmpeg.V(ffmpeg.LogLevelError),
 		ffmpeg.Debug(true),
 		// ffmpeg.Dry(true),

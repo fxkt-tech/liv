@@ -82,7 +82,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 		output.File(params.Outfile),
 	)
 
-	return ffmpeg.NewFFmpeg(ss.ffmpegOpts...).
+	return ffmpeg.New(ss.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(output.New(outputOptions...)).
@@ -134,7 +134,7 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 		output.File(params.Outfile),
 	)
 
-	return ffmpeg.NewFFmpeg(ss.ffmpegOpts...).
+	return ffmpeg.New(ss.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(output.New(outputOptions...)).

@@ -124,7 +124,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		outputs = append(outputs, output.New(outputOpts...))
 	}
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(outputs...).
@@ -178,7 +178,7 @@ func (tc *Transcode) SimpleMP3(ctx context.Context, params *TranscodeParams) err
 		outputs = append(outputs, output.New(outputOpts...))
 	}
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(outputs...).
@@ -249,7 +249,7 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 		outputs = append(outputs, output.New(outputOpts...))
 	}
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(outputs...).
@@ -281,7 +281,7 @@ func (tc *Transcode) ConvertContainer(ctx context.Context, params *ConvertContai
 	}
 	outputs = append(outputs, output.New(outputOpts...))
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddOutput(outputs...).
 		Run(ctx)
@@ -382,7 +382,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 		output.Format(codec.HLS),
 	)
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(outputs...).
@@ -496,7 +496,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		output.File(params.Outfile),
 	)
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddFilter(filters...).
 		AddOutput(outputs...).
@@ -526,7 +526,7 @@ func (tc *Transcode) Concat(ctx context.Context, params *ConcatParams) error {
 		return err
 	}
 
-	return ffmpeg.NewFFmpeg(
+	return ffmpeg.New(
 		ffmpeg.Debug(true),
 	).AddInput(
 		input.WithConcat(params.ConcatFile),
@@ -564,7 +564,7 @@ func (tc *Transcode) ExtractAudio(ctx context.Context, params *ExtractAudioParam
 
 	outputs = append(outputs, output.New(outputOpts...))
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddOutput(outputs...).
 		Run(ctx)
@@ -602,7 +602,7 @@ func (tc *Transcode) MergeByFrames(ctx context.Context, params *MergeParams) err
 
 	outputs = append(outputs, output.New(outputOpts...))
 
-	return ffmpeg.NewFFmpeg(tc.ffmpegOpts...).
+	return ffmpeg.New(tc.ffmpegOpts...).
 		AddInput(inputs...).
 		AddOutput(outputs...).
 		Run(ctx)

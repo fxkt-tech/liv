@@ -15,7 +15,7 @@ func main() {
 		input1 = input.WithSimple("file.txt")
 	)
 
-	ffmpeg.NewFFmpeg(
+	ffmpeg.New(
 		// ffmpeg.Binary("/usr/local/bin/ffmpeg"),
 		// ffmpeg.V(ffmpeg.LogLevelError),
 		ffmpeg.V(""),
