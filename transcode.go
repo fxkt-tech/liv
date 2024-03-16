@@ -12,6 +12,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffmpeg/util"
 	"github.com/fxkt-tech/liv/internal/sugar"
 )
@@ -82,8 +83,8 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		// 添加水印
 		if logos := sub.Filters.Logo; len(logos) > 0 {
 			for _, logo := range logos {
-				var finalLogoStream filter.Filter
-				logoStream := filter.SelectStream(logoStartIndex+i, filter.StreamVideo, true)
+				var finalLogoStream stream.Streamer
+				logoStream := stream.V(logoStartIndex + i)
 				if logo.NeedScale() {
 					logoScale := filter.Scale(nm.Gen(),
 						util.FixPixelLen(int32(logo.LW)), util.FixPixelLen(int32(logo.LH))).Use(logoStream)
@@ -101,9 +102,9 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		}
 
 		// 处理output
-		outputOpts := []output.OutputOption{
-			output.Map(lastFilter.Name(0)),
-			output.Map("0:a?"),
+		outputOpts := []output.Option{
+			output.Map(lastFilter),
+			output.Map(stream.Select(0, stream.MayAudio)),
 			output.VideoCodec(sub.Filters.Video.Codec),
 			output.AudioCodec(sub.Filters.Audio.Codec),
 			output.MovFlags("faststart"),
@@ -111,7 +112,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 			output.MaxMuxingQueueSize(4086),
 			output.File(sub.Outfile),
 		}
-		outputOpts = append(outputOpts, metadataOutputOptionFromKV(sub.Filters.Metadata)...)
+		outputOpts = append(outputOpts, metadataOptionFromKV(sub.Filters.Metadata)...)
 
 		// 处理在每一路输出流的裁剪
 		if sub.Filters.Clip != nil {
@@ -131,8 +132,8 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		Run(ctx)
 }
 
-func metadataOutputOptionFromKV(kvs []*KV) []output.OutputOption {
-	oos := make([]output.OutputOption, len(kvs))
+func metadataOptionFromKV(kvs []*KV) []output.Option {
+	oos := make([]output.Option, len(kvs))
 	for i, kv := range kvs {
 		oos[i] = output.Metadata(kv.K, kv.V)
 	}
@@ -159,15 +160,15 @@ func (tc *Transcode) SimpleMP3(ctx context.Context, params *TranscodeParams) err
 	// 处理filter和output
 	//
 	// 将源文件分为多个副本，用于生成多个output
-	fsplit := filter.ASplit(nm.Gen(), sublen).Use(filter.SelectStream(0, filter.StreamAudio, true))
+	fsplit := filter.ASplit(nm.Gen(), sublen).Use(stream.V(0))
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
 		lastFilter := fsplit.Copy(i)
 
 		// 处理output
-		outputOpts := []output.OutputOption{
-			output.Map(lastFilter.Name(0)),
+		outputOpts := []output.Option{
+			output.Map(lastFilter),
 			output.AudioCodec(sub.Filters.Audio.Codec),
 			output.AudioBitrate(sub.Filters.Audio.Bitrate),
 			output.Thread(sub.Threads),
@@ -238,8 +239,8 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 		}
 
 		// 处理output
-		outputOpts := []output.OutputOption{
-			output.Map(lastFilter.Name(0)),
+		outputOpts := []output.Option{
+			output.Map(lastFilter),
 			output.VideoCodec(sub.Filters.Video.Codec),
 			output.Thread(sub.Threads),
 			output.MaxMuxingQueueSize(4086),
@@ -271,7 +272,7 @@ func (tc *Transcode) ConvertContainer(ctx context.Context, params *ConvertContai
 	inputs = append(inputs, input.WithSimple(params.InFile))
 
 	// 处理output
-	outputOpts := []output.OutputOption{
+	outputOpts := []output.Option{
 		output.VideoCodec(codec.Copy),
 		output.AudioCodec(codec.Copy),
 		output.MovFlags("faststart"),
@@ -339,8 +340,8 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 		// 添加水印
 		if logos := params.Filters.Logo; len(logos) > 0 {
 			for i, logo := range logos {
-				var finalLogoStream filter.Filter
-				logoStream := filter.SelectStream(logoStartIndex+i, filter.StreamVideo, true)
+				var finalLogoStream stream.Streamer
+				logoStream := stream.V(logoStartIndex + i)
 				if logo.NeedScale() {
 					logoScale := filter.Scale(nm.Gen(),
 						util.FixPixelLen(int32(logo.LW)), util.FixPixelLen(int32(logo.LH))).Use(logoStream)
@@ -365,8 +366,8 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 
 	// 处理output
 	outputs[0] = output.New(
-		output.Map(lastFilter.Name(0)),
-		output.Map("0:a?"),
+		output.Map(lastFilter),
+		output.Map(stream.Select(0, stream.MayAudio)),
 		output.Crf(params.Filters.Video.Crf),
 		output.VideoCodec(params.Filters.Video.Codec),
 		output.AudioCodec(params.Filters.Audio.Codec),
@@ -442,8 +443,8 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		// 添加水印
 		if logos := params.Filters.Logo; len(logos) > 0 {
 			for i, logo := range logos {
-				var finalLogoStream filter.Filter
-				logoStream := filter.SelectStream(logoStartIndex+i, filter.StreamVideo, true)
+				var finalLogoStream stream.Streamer
+				logoStream := stream.V(logoStartIndex + i)
 				if logo.NeedScale() {
 					logoScale := filter.Scale(nm.Gen(),
 						util.FixPixelLen(int32(logo.LW)), util.FixPixelLen(int32(logo.LH))).Use(logoStream)
@@ -469,7 +470,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 
 		// 设置音频PTS
 		if apts := params.Filters.Video.APTS; apts != "" {
-			aStream := filter.SelectStream(0, filter.StreamAudio, true)
+			aStream := stream.A(0)
 			fasetpts := filter.ASetPTS(nm.Gen(), apts).Use(aStream)
 			filters = append(filters, fasetpts)
 			lastAudioFilter = fasetpts
@@ -483,8 +484,8 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 
 	// 处理output
 	outputs[0] = output.New(
-		output.Map(lastFilter.Name(0)),
-		output.Map(lastAudioFilter.Name(0)),
+		output.Map(lastFilter),
+		output.Map(lastAudioFilter),
 		output.VideoCodec(params.Filters.Video.Codec),
 		output.AudioCodec(params.Filters.Audio.Codec),
 		output.Crf(params.Filters.Video.Crf),
@@ -508,7 +509,7 @@ func concatFile(files []string, localPath string) error {
 	if err != nil {
 		return err
 	}
-	files = sugar.Range(files, func(f string) string { return fmt.Sprintf("file %s", f) })
+	files = sugar.Multi(files, func(f string) string { return fmt.Sprintf("file %s", f) })
 	fs := strings.Join(files, "\n")
 	_, err = f.Write([]byte(fs))
 	return err
@@ -556,9 +557,9 @@ func (tc *Transcode) ExtractAudio(ctx context.Context, params *ExtractAudioParam
 	inputs = append(inputs, input.WithSimple(params.Infile))
 
 	// 处理output
-	outputOpts := []output.OutputOption{
+	outputOpts := []output.Option{
 		output.AudioCodec(codec.Copy),
-		output.VideoCodec(codec.Nop),
+		output.VideoCodec(codec.Nope),
 		output.File(params.Outfile),
 	}
 
@@ -589,7 +590,7 @@ func (tc *Transcode) MergeByFrames(ctx context.Context, params *MergeParams) err
 	)
 
 	// 处理output
-	outputOpts := []output.OutputOption{
+	outputOpts := []output.Option{
 		output.AudioCodec(codec.Copy),
 		output.VideoCodec(params.Filters.Video.Codec),
 		output.AudioCodec(params.Filters.Audio.Codec),

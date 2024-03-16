@@ -15,6 +15,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffprobe"
 	"github.com/fxkt-tech/liv/internal/math"
 )
@@ -47,12 +48,12 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 		nm            = naming.New()
 		inputs        input.Inputs
 		filters       filter.Filters
-		outputOptions []output.OutputOption
+		outputOptions []output.Option
 	)
 
 	inputs = append(inputs, input.WithTime(params.StartTime, 0, params.Infile))
 
-	lastFilter := filter.SelectStream(0, filter.StreamVideo, true)
+	lastFilter := stream.V(0)
 	// 使用普通帧截图时，必须要传截图间隔，除非只截一张
 	switch params.FrameType {
 	case 0: // 关键帧
@@ -74,7 +75,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 	}
 
 	if len(filters) > 0 {
-		outputOptions = append(outputOptions, output.Map(lastFilter.Name(0)))
+		outputOptions = append(outputOptions, output.Map(lastFilter))
 	}
 	outputOptions = append(outputOptions,
 		output.Vframes(params.Num),
@@ -120,7 +121,7 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 		nm            = naming.New()
 		inputs        input.Inputs
 		filters       filter.Filters
-		outputOptions []output.OutputOption
+		outputOptions []output.Option
 	)
 
 	inputs = append(inputs, input.WithSimple(params.Infile))
@@ -185,8 +186,8 @@ func (ss *Snapshot) SVGMark(ctx context.Context, params *SVGMarkParams) error {
 			fromy := int(annotation.FromPoint.Y * float64(vstream.Height))
 			tox := int(annotation.ToPoint.X * float64(vstream.Width))
 			toy := int(annotation.ToPoint.Y * float64(vstream.Height))
-			minx := int(math.Min(float64(fromx), float64(tox)))
-			miny := int(math.Min(float64(fromy), float64(toy)))
+			minx := int(min(float64(fromx), float64(tox)))
+			miny := int(min(float64(fromy), float64(toy)))
 			w := int(math.Abs(float64(fromx - tox)))
 			h := int(math.Abs(float64(fromy - toy)))
 			styles := []string{"fill:transparent"}

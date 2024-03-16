@@ -1,188 +1,18 @@
 package output
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
+	"github.com/fxkt-tech/liv/ffmpeg/stream"
 )
-
-type OutputOption func(*Output)
-
-func Map(m string) OutputOption {
-	return func(o *Output) {
-		o.maps = append(o.maps, m)
-	}
-}
-
-func MovFlags(flag string) OutputOption {
-	return func(o *Output) {
-		o.movflags = flag
-	}
-}
-
-func Thread(n int32) OutputOption {
-	return func(o *Output) {
-		if n > 0 {
-			o.threads = n
-		}
-	}
-}
-
-func MaxMuxingQueueSize(sz int32) OutputOption {
-	return func(o *Output) {
-		o.max_muxing_queue_size = sz
-	}
-}
-
-func VideoCodec(cv string) OutputOption {
-	return func(o *Output) {
-		o.cv = cv
-	}
-}
-
-func AudioCodec(ca string) OutputOption {
-	return func(o *Output) {
-		o.ca = ca
-	}
-}
-
-func VideoBitrate(bv int32) OutputOption {
-	return func(o *Output) {
-		o.bv = bv
-	}
-}
-
-func PixFmt(pixFmt string) OutputOption {
-	return func(o *Output) {
-		o.pix_fmt = pixFmt
-	}
-}
-
-func Crf(crf int32) OutputOption {
-	return func(o *Output) {
-		o.crf = crf
-	}
-}
-
-func AudioBitrate(ba int32) OutputOption {
-	return func(o *Output) {
-		o.ba = ba
-	}
-}
-
-func Metadata(k, v string) OutputOption {
-	return func(o *Output) {
-		o.metadatas = append(o.metadatas, fmt.Sprintf("%s=%s", k, v))
-	}
-}
-
-func StartTime(ss float64) OutputOption {
-	return func(o *Output) {
-		o.ss = ss
-	}
-}
-
-func Duration(t float64) OutputOption {
-	return func(o *Output) {
-		o.t = t
-	}
-}
-
-func File(f string) OutputOption {
-	return func(o *Output) {
-		o.file = f
-	}
-}
-
-func Format(f string) OutputOption {
-	return func(o *Output) {
-		o.f = f
-	}
-}
-
-func VarStreamMap(s string) OutputOption {
-	return func(o *Output) {
-		o.var_stream_map = s
-	}
-}
-
-func VSync(vsync string) OutputOption {
-	return func(o *Output) {
-		o.vsync = vsync
-	}
-}
-
-func GOP(g int32) OutputOption {
-	return func(o *Output) {
-		o.g = g
-	}
-}
-
-// hls
-
-func HLSSegmentType(value string) OutputOption {
-	return func(o *Output) {
-		o.hls_segment_type = value
-	}
-}
-
-func HLSFlags(value string) OutputOption {
-	return func(o *Output) {
-		o.hls_flags = value
-	}
-}
-
-func HLSPlaylistType(value string) OutputOption {
-	return func(o *Output) {
-		o.hls_playlist_type = value
-	}
-}
-
-func HLSTime(value int32) OutputOption {
-	return func(o *Output) {
-		o.hls_time = value
-	}
-}
-
-func MasterPlName(value string) OutputOption {
-	return func(o *Output) {
-		o.master_pl_name = value
-	}
-}
-
-func HLSSegmentFilename(value string) OutputOption {
-	return func(o *Output) {
-		o.hls_segment_filename = value
-	}
-}
-
-func HLSKeyInfoFile(f string) OutputOption {
-	return func(o *Output) {
-		o.hls_key_info_file = f
-	}
-}
-
-// img
-
-func Vframes(vframes int32) OutputOption {
-	return func(o *Output) {
-		o.vframes = vframes
-	}
-}
-
-func KV(k, v string) OutputOption {
-	return func(o *Output) {
-		o.nonSupportArgs[k] = v
-	}
-}
 
 // Output is common output info.
 type Output struct {
-	maps                  []string // mean is -map.
-	cv, ca                string   // cv is c:v, ca is c:a.
-	bv, ba                int32    // bv is b:v, ba is b:a.
+	maps                  []stream.Streamer // mean is -map.
+	cv, ca                string            // cv is c:v, ca is c:a.
+	bv, ba                int32             // bv is b:v, ba is b:a.
 	pix_fmt               string
 	crf                   int32
 	metadatas             []string // mean is -metadata.
@@ -212,7 +42,7 @@ type Output struct {
 	vframes int32
 }
 
-func New(opts ...OutputOption) *Output {
+func New(opts ...Option) *Output {
 	op := &Output{
 		// threads:               4,
 		// max_muxing_queue_size: 4086,
@@ -231,18 +61,18 @@ func New(opts ...OutputOption) *Output {
 func (o *Output) Params() (params []string) {
 	if len(o.maps) != 0 {
 		for _, m := range o.maps {
-			params = append(params, "-map", m)
+			params = append(params, "-map", m.Name())
 		}
 	}
 	if o.cv != "" {
-		if o.cv != codec.Nop {
+		if o.cv != codec.Nope {
 			params = append(params, "-c:v", o.cv)
 		} else {
 			params = append(params, "-vn")
 		}
 	}
 	if o.ca != "" {
-		if o.ca != codec.Nop {
+		if o.ca != codec.Nope {
 			params = append(params, "-c:a", o.ca)
 		} else {
 			params = append(params, "-an")

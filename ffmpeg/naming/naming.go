@@ -7,24 +7,22 @@ import (
 	"time"
 )
 
-func init() {
-	rand.Seed(time.Now().Unix())
-}
-
 type Naming struct {
-	// names map[string]bool
+	rand *rand.Rand
 }
 
 func New() *Naming {
-	return &Naming{}
+	return &Naming{
+		rand: rand.New(rand.NewSource((time.Now().UnixNano()))),
+	}
 }
 
 func (n *Naming) Gen() string {
-	return fmt.Sprintf("%x", rand.Int31n(math.MaxInt32))
+	return fmt.Sprintf("%x", n.rand.Int31n(math.MaxInt32))
 }
 
 func (n *Naming) Gen64() string {
-	return fmt.Sprintf("%x", math.MaxInt64)
+	return fmt.Sprintf("%x", n.rand.Int63n(math.MaxInt64))
 }
 
 func (n *Naming) Empty() string {

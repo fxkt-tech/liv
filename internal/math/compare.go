@@ -10,23 +10,7 @@ func Abs[T constraints.Integer | constraints.Float](x T) T {
 	return x
 }
 
-// 最大值
-func Max[T constraints.Ordered](a, b T) T {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-// 最小值
-func Min[T constraints.Ordered](a, b T) T {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // 裁剪
 func Clip[T constraints.Ordered](x, a, b T) T {
-	return Min(Max(x, a), b)
+	return min(max(x, a), b)
 }

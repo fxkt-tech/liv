@@ -5,52 +5,10 @@ import (
 	"strings"
 )
 
-type InputOption func(*Input)
-
-func I(i string) InputOption {
-	return func(o *Input) {
-		o.i = i
-	}
-}
-
-func VideoCodec(cv string) InputOption {
-	return func(o *Input) {
-		o.cv = cv
-	}
-}
-
-func StartTime(ss float64) InputOption {
-	return func(o *Input) {
-		o.ss = ss
-	}
-}
-
-func Duration(t float64) InputOption {
-	return func(o *Input) {
-		o.t = t
-	}
-}
-
-func FPS(fps string) InputOption {
-	return func(i *Input) {
-		i.r = fps
-	}
-}
-
-func Format(f string) InputOption {
-	return func(i *Input) {
-		i.f = f
-	}
-}
-
-func Safe(safe string) InputOption {
-	return func(i *Input) {
-		i.safe = safe
-	}
-}
-
 // Input is common input info.
 type Input struct {
+	index int
+
 	cv       string
 	r        string
 	safe     string
@@ -62,7 +20,7 @@ type Input struct {
 	// ext []string // extra params.
 }
 
-func New(opts ...InputOption) *Input {
+func New(opts ...Option) *Input {
 	i := &Input{}
 	for _, o := range opts {
 		o(i)

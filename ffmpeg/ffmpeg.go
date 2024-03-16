@@ -10,39 +10,8 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/internal/sugar"
 )
-
-type Option func(*FFmpeg)
-
-func Binary(bin string) Option {
-	return func(fm *FFmpeg) {
-		fm.bin = bin
-	}
-}
-
-func Debug(debug bool) Option {
-	return func(fm *FFmpeg) {
-		fm.debug = debug
-	}
-}
-
-func Yes(y bool) Option {
-	return func(fm *FFmpeg) {
-		fm.y = y
-	}
-}
-
-func V(v LogLevel) Option {
-	return func(fm *FFmpeg) {
-		fm.v = v
-	}
-}
-
-func Dry(dry bool) Option {
-	return func(f *FFmpeg) {
-		f.dry = dry
-	}
-}
 
 type FFmpeg struct {
 	dry bool // dry run
@@ -58,19 +27,13 @@ type FFmpeg struct {
 	outputs output.Outputs
 }
 
-type Generater interface {
-	String() string
-}
-
 func New(opts ...Option) *FFmpeg {
 	fm := &FFmpeg{
 		bin: "ffmpeg",
 		y:   true,
 		v:   LogLevelError,
 	}
-	for _, o := range opts {
-		o(fm)
-	}
+	sugar.Range(opts, func(o Option) { o(fm) })
 	return fm
 }
 
@@ -97,6 +60,7 @@ func (fm *FFmpeg) Params() []string {
 	if fm.y {
 		params = append(params, "-y")
 	}
+
 	params = append(params, fm.inputs.Params()...)
 	params = append(params, fm.filters.Params()...)
 	params = append(params, fm.outputs.Params()...)
