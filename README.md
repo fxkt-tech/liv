@@ -1,6 +1,6 @@
 # ffmpeg
-friendly ffmpeg sdk for go.
 
+friendly ffmpeg wrap for go.
 
 - ffmpeg
   - 多路输入
@@ -19,8 +19,8 @@ friendly ffmpeg sdk for go.
     - -movflags（默认faststart）
     - 输出文件
 
-
 ### 支持的滤镜
+
 - 视频属性video：
   - 缩放clip：可以设置width和height，不设置默认-2（自适应偶数长度）
 - 音频属性audio：

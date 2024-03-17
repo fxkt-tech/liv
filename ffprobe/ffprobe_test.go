@@ -9,6 +9,26 @@ import (
 	"github.com/fxkt-tech/liv/ffprobe"
 )
 
+func TestExtract(t *testing.T) {
+	var (
+		ctx = context.Background()
+
+		infile = "in.mp4"
+	)
+
+	fp, err := ffprobe.New().Input(infile).Extract(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vStream := fp.GetFirstVideoStream()
+	if vStream == nil {
+		t.Fatal("file has no v stream")
+	}
+
+	t.Log(vStream)
+}
+
 func TestProbeRunRaw(t *testing.T) {
 	ctx := context.Background()
 

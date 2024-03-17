@@ -73,7 +73,7 @@ func (ff *FFprobe) Input(input string) *FFprobe {
 	return ff
 }
 
-func (ff *FFprobe) DryRun() {
+func (ff *FFprobe) dryRun() {
 	var ps []string
 	ps = append(ps, ff.bin)
 	ps = append(ps, ff.Params()...)
@@ -82,10 +82,10 @@ func (ff *FFprobe) DryRun() {
 
 func (ff *FFprobe) Run(ctx context.Context) error {
 	if ff.debug {
-		ff.DryRun()
+		ff.dryRun()
 	} else {
 		if ff.dry {
-			ff.DryRun()
+			ff.dryRun()
 			return nil
 		}
 	}
@@ -106,6 +106,14 @@ func (ff *FFprobe) Run(ctx context.Context) error {
 	}
 	ff.probe = probe
 	return nil
+}
+
+func (ff *FFprobe) Extract(ctx context.Context) (*FFprobe, error) {
+	err := ff.Run(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ff, nil
 }
 
 func (ff *FFprobe) RunRetRaw(ctx context.Context) ([]byte, error) {
