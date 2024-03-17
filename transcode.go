@@ -10,7 +10,6 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
-	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffmpeg/util"
@@ -42,7 +41,6 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 	}
 
 	var (
-		nm             = naming.New()
 		inputs         input.Inputs
 		filters        filter.Filters
 		outputs        output.Outputs
@@ -56,7 +54,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 	// 处理filter和output
 	//
 	// 将源文件分为多个副本，用于生成多个output
-	fsplit := filter.Split(nm.Gen(), sublen)
+	fsplit := filter.Split(sublen)
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
@@ -65,7 +63,10 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		// 处理遮标
 		if delogos := sub.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
-				fdelogo := filter.Delogo(nm.Gen(), int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).Use(lastFilter)
+				fdelogo := filter.Delogo(
+					int64(delogo.Rect.X), int64(delogo.Rect.Y),
+					int64(delogo.Rect.W), int64(delogo.Rect.H),
+				).Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
 			}
@@ -73,9 +74,10 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 
 		// 视频缩放
 		if sub.Filters.Video != nil {
-			scale := filter.Scale(nm.Gen(),
-				util.FixPixelLen(sub.Filters.Video.Width), util.FixPixelLen(sub.Filters.Video.Height)).
-				Use(lastFilter)
+			scale := filter.Scale(
+				util.FixPixelLen(sub.Filters.Video.Width),
+				util.FixPixelLen(sub.Filters.Video.Height),
+			).Use(lastFilter)
 			filters = append(filters, scale)
 			lastFilter = scale
 		}
@@ -86,14 +88,16 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 				var finalLogoStream stream.Streamer
 				logoStream := stream.V(logoStartIndex + i)
 				if logo.NeedScale() {
-					logoScale := filter.Scale(nm.Gen(),
-						util.FixPixelLen(int32(logo.LW)), util.FixPixelLen(int32(logo.LH))).Use(logoStream)
+					logoScale := filter.Scale(
+						util.FixPixelLen(int32(logo.LW)),
+						util.FixPixelLen(int32(logo.LH)),
+					).Use(logoStream)
 					filters = append(filters, logoScale)
 					finalLogoStream = logoScale
 				} else {
 					finalLogoStream = logoStream
 				}
-				flogo := filter.Logo(nm.Gen(), int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
+				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
 					Use(lastFilter, finalLogoStream)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
@@ -147,7 +151,6 @@ func (tc *Transcode) SimpleMP3(ctx context.Context, params *TranscodeParams) err
 	}
 
 	var (
-		nm      = naming.New()
 		inputs  input.Inputs
 		filters filter.Filters
 		outputs output.Outputs
@@ -160,7 +163,7 @@ func (tc *Transcode) SimpleMP3(ctx context.Context, params *TranscodeParams) err
 	// 处理filter和output
 	//
 	// 将源文件分为多个副本，用于生成多个output
-	fsplit := filter.ASplit(nm.Gen(), sublen).Use(stream.V(0))
+	fsplit := filter.ASplit(sublen).Use(stream.V(0))
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
@@ -193,7 +196,6 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 	}
 
 	var (
-		nm      = naming.New()
 		inputs  input.Inputs
 		filters filter.Filters
 		outputs output.Outputs
@@ -206,7 +208,7 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 	// 处理filter和output
 	//
 	// 将源文件分为多个副本，用于生成多个output
-	fsplit := filter.Split(nm.Gen(), sublen)
+	fsplit := filter.Split(sublen)
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
@@ -215,7 +217,7 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 		// 处理遮标
 		if delogos := sub.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
-				fdelogo := filter.Delogo(nm.Gen(), int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).Use(lastFilter)
+				fdelogo := filter.Delogo(int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
 			}
@@ -223,7 +225,7 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 
 		// 视频缩放
 		if sub.Filters.Video != nil {
-			scale := filter.Scale(nm.Gen(), sub.Filters.Video.Width, sub.Filters.Video.Height).Use(lastFilter)
+			scale := filter.Scale(sub.Filters.Video.Width, sub.Filters.Video.Height).Use(lastFilter)
 			filters = append(filters, scale)
 			lastFilter = scale
 		}
@@ -231,7 +233,7 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 		// 添加水印
 		if logos := sub.Filters.Logo; len(logos) > 0 {
 			for _, logo := range logos {
-				flogo := filter.Logo(nm.Gen(), int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).Use(lastFilter)
+				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).Use(lastFilter)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
 				lastFilter = flogo
@@ -296,7 +298,6 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 	}
 
 	var (
-		nm             = naming.New()
 		inputs         input.Inputs
 		filters        filter.Filters
 		outputs        = make(output.Outputs, 1)
@@ -320,7 +321,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 		// 处理遮标
 		if delogos := params.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
-				fdelogo := filter.Delogo(nm.Gen(),
+				fdelogo := filter.Delogo(
 					int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).
 					Use(lastFilter)
 				filters = append(filters, fdelogo)
@@ -330,7 +331,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 
 		// 视频缩放
 		if params.Filters.Video != nil {
-			scale := filter.Scale(nm.Gen(),
+			scale := filter.Scale(
 				util.FixPixelLen(params.Filters.Video.Width), util.FixPixelLen(params.Filters.Video.Height)).
 				Use(lastFilter)
 			filters = append(filters, scale)
@@ -343,14 +344,14 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 				var finalLogoStream stream.Streamer
 				logoStream := stream.V(logoStartIndex + i)
 				if logo.NeedScale() {
-					logoScale := filter.Scale(nm.Gen(),
+					logoScale := filter.Scale(
 						util.FixPixelLen(int32(logo.LW)), util.FixPixelLen(int32(logo.LH))).Use(logoStream)
 					filters = append(filters, logoScale)
 					finalLogoStream = logoScale
 				} else {
 					finalLogoStream = logoStream
 				}
-				flogo := filter.Logo(nm.Gen(), int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
+				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
 					Use(lastFilter, finalLogoStream)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
@@ -359,7 +360,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 		}
 	} else {
 		// 为使用map必须放一个filter
-		scale := filter.Scale(nm.Gen(), util.FixPixelLen(0), util.FixPixelLen(0)).Use(lastFilter)
+		scale := filter.Scale(util.FixPixelLen(0), util.FixPixelLen(0)).Use(lastFilter)
 		filters = append(filters, scale)
 		lastFilter = scale
 	}
@@ -398,7 +399,6 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 	}
 
 	var (
-		nm             = naming.New()
 		inputs         input.Inputs
 		filters        filter.Filters
 		outputs        = make(output.Outputs, 1)
@@ -423,7 +423,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		// 处理遮标
 		if delogos := params.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
-				fdelogo := filter.Delogo(nm.Gen(),
+				fdelogo := filter.Delogo(
 					int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).
 					Use(lastFilter)
 				filters = append(filters, fdelogo)
@@ -433,7 +433,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 
 		// 视频缩放
 		if params.Filters.Video != nil {
-			scale := filter.Scale(nm.Gen(),
+			scale := filter.Scale(
 				util.FixPixelLen(params.Filters.Video.Width), util.FixPixelLen(params.Filters.Video.Height)).
 				Use(lastFilter)
 			filters = append(filters, scale)
@@ -446,14 +446,14 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 				var finalLogoStream stream.Streamer
 				logoStream := stream.V(logoStartIndex + i)
 				if logo.NeedScale() {
-					logoScale := filter.Scale(nm.Gen(),
+					logoScale := filter.Scale(
 						util.FixPixelLen(int32(logo.LW)), util.FixPixelLen(int32(logo.LH))).Use(logoStream)
 					filters = append(filters, logoScale)
 					finalLogoStream = logoScale
 				} else {
 					finalLogoStream = logoStream
 				}
-				flogo := filter.Logo(nm.Gen(), int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
+				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
 					Use(lastFilter, finalLogoStream)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
@@ -463,7 +463,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 
 		// 设置视频PTS
 		if pts := params.Filters.Video.PTS; pts != "" {
-			fsetpts := filter.SetPTS(nm.Gen(), pts).Use(lastFilter)
+			fsetpts := filter.SetPTS(pts).Use(lastFilter)
 			filters = append(filters, fsetpts)
 			lastFilter = fsetpts
 		}
@@ -471,13 +471,13 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		// 设置音频PTS
 		if apts := params.Filters.Video.APTS; apts != "" {
 			aStream := stream.A(0)
-			fasetpts := filter.ASetPTS(nm.Gen(), apts).Use(aStream)
+			fasetpts := filter.ASetPTS(apts).Use(aStream)
 			filters = append(filters, fasetpts)
 			lastAudioFilter = fasetpts
 		}
 	} else {
 		// 为使用map必须放一个filter
-		scale := filter.Scale(nm.Gen(), util.FixPixelLen(0), util.FixPixelLen(0)).Use(lastFilter)
+		scale := filter.Scale(util.FixPixelLen(0), util.FixPixelLen(0)).Use(lastFilter)
 		filters = append(filters, scale)
 		lastFilter = scale
 	}
@@ -528,7 +528,7 @@ func (tc *Transcode) Concat(ctx context.Context, params *ConcatParams) error {
 	}
 
 	return ffmpeg.New(
-		ffmpeg.Debug(true),
+		ffmpeg.WithDebug(true),
 	).AddInput(
 		input.WithConcat(params.ConcatFile),
 	).AddOutput(

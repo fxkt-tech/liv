@@ -31,8 +31,8 @@ func main() {
 
 	tc := liv.NewTranscode(
 		liv.FFmpegOptions(
-			ffmpeg.Binary("ffmpeg"),
-			ffmpeg.Debug(true),
+			ffmpeg.WithBin("ffmpeg"),
+			ffmpeg.WithDebug(true),
 			// ffmpeg.Dry(true),
 		),
 	)

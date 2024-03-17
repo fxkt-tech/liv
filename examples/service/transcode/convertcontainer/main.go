@@ -19,8 +19,8 @@ func main() {
 
 	tc := liv.NewTranscode(
 		liv.FFmpegOptions(
-			ffmpeg.Binary("ffmpeg"),
-			// ffmpeg.Dry(true),
+			ffmpeg.WithBin("ffmpeg"),
+			// ffmpeg.WithDry(true),
 		),
 	)
 	err := tc.ConvertContainer(ctx, params)

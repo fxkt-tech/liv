@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
@@ -15,11 +16,9 @@ func main() {
 		input1 = input.WithSimple("file.txt")
 	)
 
-	ffmpeg.New(
-		// ffmpeg.Binary("/usr/local/bin/ffmpeg"),
-		// ffmpeg.V(ffmpeg.LogLevelError),
-		ffmpeg.V(""),
-		ffmpeg.Debug(true),
+	err := ffmpeg.New(
+		ffmpeg.WithLogLevel(""),
+		ffmpeg.WithDebug(true),
 	// ffmpeg.Dry(true),
 	).AddInput(
 		input1,
@@ -31,4 +30,7 @@ func main() {
 			output.File("out.mp4"),
 		),
 	).Run(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

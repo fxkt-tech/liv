@@ -13,7 +13,6 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
-	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffprobe"
@@ -45,7 +44,6 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 	}
 
 	var (
-		nm            = naming.New()
 		inputs        input.Inputs
 		filters       filter.Filters
 		outputOptions []output.Option
@@ -57,19 +55,19 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 	// 使用普通帧截图时，必须要传截图间隔，除非只截一张
 	switch params.FrameType {
 	case 0: // 关键帧
-		selectFilter := filter.Select(nm.Gen(), "'eq(pict_type,I)'")
+		selectFilter := filter.Select("'eq(pict_type,I)'")
 		filters = append(filters, selectFilter)
 		lastFilter = selectFilter
 		outputOptions = append(outputOptions, output.VSync("vfr"))
 	case 1:
 		if params.Num != 1 {
-			fpsFilter := filter.FPS(nm.Gen(), math.Fraction(1, params.Interval))
+			fpsFilter := filter.FPS(math.Fraction(1, params.Interval))
 			filters = append(filters, fpsFilter)
 			lastFilter = fpsFilter
 		}
 	}
 	if params.Width > 0 || params.Height > 0 {
-		scaleFilter := filter.Scale(nm.Gen(), params.Width, params.Height).Use(lastFilter)
+		scaleFilter := filter.Scale(params.Width, params.Height).Use(lastFilter)
 		filters = append(filters, scaleFilter)
 		lastFilter = scaleFilter
 	}
@@ -118,7 +116,6 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 	}
 
 	var (
-		nm            = naming.New()
 		inputs        input.Inputs
 		filters       filter.Filters
 		outputOptions []output.Option
@@ -126,9 +123,9 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 
 	inputs = append(inputs, input.WithSimple(params.Infile))
 
-	filterFPS := filter.FPS(nm.Gen(), math.Fraction(frames, duration))
-	filterScale := filter.Scale(nm.Gen(), params.Width, params.Height).Use(filterFPS)
-	filterTile := filter.Tile(nm.Empty(), params.XLen, params.YLen).Use(filterScale)
+	filterFPS := filter.FPS(math.Fraction(frames, duration))
+	filterScale := filter.Scale(params.Width, params.Height).Use(filterFPS)
+	filterTile := filter.Tile(params.XLen, params.YLen).Use(filterScale)
 
 	filters = append(filters, filterFPS, filterScale, filterTile)
 	outputOptions = append(outputOptions,

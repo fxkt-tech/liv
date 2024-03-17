@@ -25,8 +25,8 @@ func main() {
 
 	tc := liv.NewSnapshot(
 		liv.FFmpegOptions(
-			ffmpeg.Binary("ffmpeg"),
-			ffmpeg.Debug(true),
+			ffmpeg.WithBin("ffmpeg"),
+			ffmpeg.WithDebug(true),
 		),
 	)
 	err := tc.Simple(ctx, params)

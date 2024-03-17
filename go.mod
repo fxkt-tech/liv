@@ -1,8 +1,8 @@
 module github.com/fxkt-tech/liv
 
-go 1.21
+go 1.22
 
 require (
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
+	golang.org/x/exp v0.0.0-20240314144324-c7f7c6466f7f
 )

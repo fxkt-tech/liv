@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var Default = New()
+
 type Naming struct {
 	rand *rand.Rand
 }

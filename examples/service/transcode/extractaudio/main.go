@@ -19,9 +19,9 @@ func main() {
 
 	tc := liv.NewTranscode(
 		liv.FFmpegOptions(
-			ffmpeg.Binary("ffmpeg"),
-			ffmpeg.Debug(true),
-			ffmpeg.Dry(true),
+			ffmpeg.WithBin("ffmpeg"),
+			ffmpeg.WithDebug(true),
+			ffmpeg.WithDry(true),
 		),
 	)
 	err := tc.ExtractAudio(ctx, params)

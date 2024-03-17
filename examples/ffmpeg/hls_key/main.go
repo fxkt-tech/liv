@@ -7,7 +7,6 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
-	"github.com/fxkt-tech/liv/ffmpeg/naming"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
 )
@@ -15,12 +14,11 @@ import (
 func main() {
 	var (
 		ctx = context.Background()
-		nm  = naming.New()
 
 		input1         = input.WithSimple("in.mp4")
 		hlsKeyInfoFile = "hls/file.keyinfo"
 
-		scale1 = filter.Scale(nm.Gen(), -2, -2).Use(stream.V(0))
+		scale1 = filter.Scale(-2, -2).Use(stream.V(0))
 
 		outfolder = "video/"
 
@@ -29,8 +27,8 @@ func main() {
 	)
 
 	ffmpeg.New(
-		ffmpeg.V(ffmpeg.LogLevelError),
-		ffmpeg.Debug(true),
+		ffmpeg.WithLogLevel(ffmpeg.LogLevelError),
+		ffmpeg.WithDebug(true),
 		// ffmpeg.Dry(true),
 	).AddInput(
 		input1,
