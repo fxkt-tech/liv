@@ -509,7 +509,7 @@ func concatFile(files []string, localPath string) error {
 	if err != nil {
 		return err
 	}
-	files = sugar.Multi(files, func(f string) string { return fmt.Sprintf("file %s", f) })
+	files = sugar.Multi(files, func(f string) string { return fmt.Sprintf("file '%s'", f) })
 	fs := strings.Join(files, "\n")
 	_, err = f.Write([]byte(fs))
 	return err
