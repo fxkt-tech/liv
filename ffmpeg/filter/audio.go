@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fxkt-tech/liv/internal/naming"
+	"golang.org/x/exp/constraints"
 )
 
 // 音频流复制成多份
@@ -12,6 +13,13 @@ func ASplit(n int) Filter {
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("asplit=%d", n),
 		counts:  n,
+	}
+}
+
+func ATempo[T constraints.Integer | constraints.Float | string](expr T) Filter {
+	return &single{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("atempo=%v", expr),
 	}
 }
 

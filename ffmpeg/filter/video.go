@@ -70,6 +70,13 @@ func Scale[T int32 | int | string](w, h T) Filter {
 	}
 }
 
+// func UnsopportedSimple(fstr string) Filter {
+// 	return &single{
+// 		name:    naming.Default.Gen(),
+// 		content: fstr,
+// 	}
+// }
+
 // 绿幕抠像
 func Chromakey(color string, similarity, blend float32) Filter {
 	return &single{

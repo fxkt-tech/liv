@@ -14,6 +14,12 @@ func Map(m stream.Streamer) Option {
 	}
 }
 
+func Shortest() Option {
+	return func(o *Output) {
+		o.shortest = true
+	}
+}
+
 func MovFlags(flag string) Option {
 	return func(o *Output) {
 		o.movflags = flag

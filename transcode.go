@@ -504,7 +504,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		Run(ctx)
 }
 
-func concatFile(files []string, localPath string) error {
+func ConcatFile(files []string, localPath string) error {
 	f, err := os.Create(localPath)
 	if err != nil {
 		return err
@@ -522,7 +522,7 @@ func (tc *Transcode) Concat(ctx context.Context, params *ConcatParams) error {
 		return err
 	}
 
-	err = concatFile(params.Infiles, params.ConcatFile)
+	err = ConcatFile(params.Infiles, params.ConcatFile)
 	if err != nil {
 		return err
 	}

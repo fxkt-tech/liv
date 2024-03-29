@@ -12,6 +12,7 @@ import (
 type Output struct {
 	maps                  []stream.Streamer // mean is -map.
 	cv, ca                string            // cv is c:v, ca is c:a.
+	shortest              bool              // -shortest
 	bv, ba                int32             // bv is b:v, ba is b:a.
 	pix_fmt               string
 	crf                   int32
@@ -77,6 +78,9 @@ func (o *Output) Params() (params []string) {
 		} else {
 			params = append(params, "-an")
 		}
+	}
+	if o.shortest {
+		params = append(params, "-shortest")
 	}
 	if o.bv != 0 {
 		params = append(params, "-b:v", strconv.FormatInt(int64(o.bv), 10))
