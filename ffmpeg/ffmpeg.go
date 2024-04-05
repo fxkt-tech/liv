@@ -61,7 +61,7 @@ func (fm *FFmpeg) Params() []string {
 		params = append(params, "-y")
 	}
 
-	params = append(params, fm.inputs.Params()...)
+	params = append(params, fm.inputs.Tidy().Params()...)
 	params = append(params, fm.filters.Params()...)
 	params = append(params, fm.outputs.Params()...)
 	return params

@@ -62,7 +62,7 @@ func New(opts ...Option) *Output {
 func (o *Output) Params() (params []string) {
 	if len(o.maps) != 0 {
 		for _, m := range o.maps {
-			params = append(params, "-map", m.Name())
+			params = append(params, "-map", m.Name(stream.PosFromOutput))
 		}
 	}
 	if o.cv != "" {

@@ -8,45 +8,45 @@ import (
 )
 
 // 音频流复制成多份
-func ASplit(n int) Filter {
-	return &multiple{
+func ASplit(n int) *MultiFilter {
+	return &MultiFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("asplit=%d", n),
 		counts:  n,
 	}
 }
 
-func ATempo[T constraints.Integer | constraints.Float | string](expr T) Filter {
-	return &single{
+func ATempo[T constraints.Integer | constraints.Float | string](expr T) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("atempo=%v", expr),
 	}
 }
 
 // 音频帧显示时间戳
-func ASetPTS(expr string) Filter {
-	return &single{
+func ASetPTS(expr string) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("asetpts=%s", expr),
 	}
 }
 
-func AMix(inputs int32) Filter {
-	return &single{
+func AMix(inputs int32) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("amix=inputs=%d", inputs),
 	}
 }
 
-func Loudnorm(i, tp int32) Filter {
-	return &single{
+func Loudnorm(i, tp int32) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("loudnorm=I=%d:TP=%d", i, tp),
 	}
 }
 
-func ADelay(delays int32) Filter {
-	return &single{
+func ADelay(delays int32) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("adelay=delays=%ds:all=1", delays),
 	}

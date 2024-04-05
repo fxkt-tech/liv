@@ -9,7 +9,6 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
-	"github.com/fxkt-tech/liv/ffmpeg/stream"
 )
 
 func main() {
@@ -18,23 +17,27 @@ func main() {
 
 		// inputs
 		iMain = input.WithSimple("in.mp4")
+		// iSub  = input.WithSimple("xx.mp4")
 
 		// filters
-		fSplit   = filter.Split(2).Use(stream.V(0))
-		fOverlay = filter.Logo(50, 100, filter.LogoTopLeft).Use(fSplit.Get(0), fSplit.Get(1))
+		// fSplit   = filter.Split(2).Use(iMain.V(), iSub.V())
+		// fOverlay = filter.Overlay(fsugar.LogoPos(50, 100, fsugar.LogoPosTopLeft)).Use(fSplit.S(0), fSplit.S(1))
+		fDelogo = filter.Delogo(0, 0, 400, 400).Use(iMain.V())
 	)
 
 	err := ffmpeg.New(
 		ffmpeg.WithDebug(true),
 		ffmpeg.WithDry(true),
 	).AddInput(
+		// iMain, iSub,
 		iMain,
 	).AddFilter(
-		fSplit, fOverlay,
+		// fSplit, fOverlay,
+		fDelogo,
 	).AddOutput(
 		output.New(
-			output.Map(fOverlay),
-			output.Map(stream.Select(0, stream.MayAudio)),
+			output.Map(fDelogo),
+			output.Map(iMain.MayA()),
 			output.Metadata("comment", "xx"),
 			output.VideoCodec(codec.X264),
 			output.AudioCodec(codec.Copy),

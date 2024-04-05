@@ -3,11 +3,13 @@ package input
 import (
 	"fmt"
 	"strings"
+
+	"github.com/fxkt-tech/liv/ffmpeg/stream"
 )
 
 // Input is common input info.
 type Input struct {
-	index int
+	idx int
 
 	cv       string
 	r        string
@@ -46,6 +48,22 @@ func WithTime(ss, t float64, i string) *Input {
 		t:  t,
 		i:  i,
 	}
+}
+
+func (i *Input) V() stream.Streamer {
+	return &InputStream{input: i, s: stream.Video}
+}
+
+func (i *Input) A() stream.Streamer {
+	return &InputStream{input: i, s: stream.Audio}
+}
+
+func (i *Input) MayV() stream.Streamer {
+	return &InputStream{input: i, s: stream.MayVideo}
+}
+
+func (i *Input) MayA() stream.Streamer {
+	return &InputStream{input: i, s: stream.MayAudio}
 }
 
 func (i *Input) Params() (params []string) {
@@ -91,4 +109,28 @@ func (inputs Inputs) Params() (params []string) {
 
 func (inputs Inputs) String() string {
 	return strings.Join(inputs.Params(), " ")
+}
+
+func (inputs Inputs) Tidy() Inputs {
+	for i, input := range inputs {
+		input.idx = i
+	}
+	return inputs
+}
+
+// stream
+
+// input型stream
+type InputStream struct {
+	input *Input
+	s     stream.Stream
+}
+
+func (s *InputStream) Name(pf stream.PosFrom) string {
+	switch pf {
+	case stream.PosFromOutput:
+		return fmt.Sprintf("%d:%s", s.input.idx, s.s)
+	default:
+		return fmt.Sprintf("[%d:%s]", s.input.idx, s.s)
+	}
 }

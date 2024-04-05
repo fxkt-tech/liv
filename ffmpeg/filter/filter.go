@@ -9,85 +9,69 @@ import (
 
 type Filter interface {
 	stream.Streamer
-	Get(int) stream.Streamer
-	Copy(int) Filter
 	String() string
-	Use(...stream.Streamer) Filter
+	// Get(int) stream.Streamer
+	// Copy(int) Filter
+	// Use(...stream.Streamer) Filter
 }
 
 // 单输出滤镜
-type single struct {
+type SingleFilter struct {
 	name    string
 	content string
 	uses    []stream.Streamer
 }
 
-func (s *single) Name() string {
+func (s *SingleFilter) Name(_ stream.PosFrom) string {
 	if s.name == "" {
 		return ""
 	}
 	return fmt.Sprintf("[%s]", s.name)
 }
 
-func (s *single) Get(i int) stream.Streamer { return s }
+func (s *SingleFilter) S() stream.Streamer { return s }
 
-func (s *single) Copy(index int) Filter {
-	return &single{
-		name:    s.name,
-		content: s.content,
-		uses:    s.uses,
-	}
-}
-
-func (s *single) String() string {
+func (s *SingleFilter) String() string {
 	fls := make([]string, len(s.uses))
 	for i, fl := range s.uses {
 		if fl != nil {
-			fls[i] = fl.Name()
+			fls[i] = fl.Name(stream.PosFromFilter)
 		}
 	}
-	return fmt.Sprintf("%s%s%s", strings.Join(fls, ""), s.content, s.Name())
+	return fmt.Sprintf("%s%s%s", strings.Join(fls, ""), s.content, s.Name(stream.PosFromFilter))
 }
 
-func (s *single) Use(streams ...stream.Streamer) Filter {
+func (s *SingleFilter) Use(streams ...stream.Streamer) *SingleFilter {
 	s.uses = append(s.uses, streams...)
 	return s
 }
 
 // 多输出滤镜
-type multiple struct {
+type MultiFilter struct {
 	name    string
 	counts  int
 	content string
 	uses    []stream.Streamer
 }
 
-func (s *multiple) Name() string {
+func (s *MultiFilter) Name(_ stream.PosFrom) string {
 	if s.name == "" {
 		return ""
 	}
 	return fmt.Sprintf("[%s]", s.name)
 }
 
-func (s *multiple) Get(i int) stream.Streamer {
+// 选择一个
+func (s *MultiFilter) S(i int) stream.Streamer {
 	name := fmt.Sprintf("[%s_%d]", s.name, i)
 	return stream.StreamImpl(name)
 }
 
-func (s *multiple) Copy(index int) Filter {
-	return &multiple{
-		name:    s.name,
-		counts:  s.counts,
-		content: s.content,
-		uses:    s.uses,
-	}
-}
-
-func (s *multiple) String() string {
+func (s *MultiFilter) String() string {
 	fls := make([]string, len(s.uses))
 	for i, fl := range s.uses {
 		if fl != nil {
-			fls[i] = fl.Name()
+			fls[i] = fl.Name(stream.PosFromFilter)
 		}
 	}
 	var names []string
@@ -97,7 +81,7 @@ func (s *multiple) String() string {
 	return fmt.Sprintf("%s%s%s", strings.Join(fls, ""), s.content, strings.Join(names, ""))
 }
 
-func (s *multiple) Use(streams ...stream.Streamer) Filter {
+func (s *MultiFilter) Use(streams ...stream.Streamer) *MultiFilter {
 	s.uses = append(s.uses, streams...)
 	return s
 }
@@ -105,11 +89,6 @@ func (s *multiple) Use(streams ...stream.Streamer) Filter {
 // filter slice
 
 type Filters []Filter
-
-// func (filters Filters) RefInput() Filters {
-
-// 	return  filters
-// }
 
 func (filters Filters) Params() (params []string) {
 	txt := filters.String()

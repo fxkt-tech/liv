@@ -9,6 +9,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
+	"github.com/fxkt-tech/liv/ffmpeg/filter/fsugar"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
@@ -58,14 +59,14 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
-		lastFilter := fsplit.Copy(i)
+		lastFilter := fsplit.S(i)
 
 		// 处理遮标
 		if delogos := sub.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
 				fdelogo := filter.Delogo(
-					int64(delogo.Rect.X), int64(delogo.Rect.Y),
-					int64(delogo.Rect.W), int64(delogo.Rect.H),
+					int32(delogo.Rect.X), int32(delogo.Rect.Y),
+					int32(delogo.Rect.W), int32(delogo.Rect.H),
 				).Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
@@ -97,7 +98,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 				} else {
 					finalLogoStream = logoStream
 				}
-				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
+				flogo := filter.Overlay(fsugar.LogoPos(int32(logo.Dx), int32(logo.Dy), logo.Pos)).
 					Use(lastFilter, finalLogoStream)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
@@ -167,7 +168,7 @@ func (tc *Transcode) SimpleMP3(ctx context.Context, params *TranscodeParams) err
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
-		lastFilter := fsplit.Copy(i)
+		lastFilter := fsplit.S(i)
 
 		// 处理output
 		outputOpts := []output.Option{
@@ -212,12 +213,12 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
 		// 处理filter
-		lastFilter := fsplit.Copy(i)
+		lastFilter := fsplit.S(i)
 
 		// 处理遮标
 		if delogos := sub.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
-				fdelogo := filter.Delogo(int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).Use(lastFilter)
+				fdelogo := filter.Delogo(int32(delogo.Rect.X), int32(delogo.Rect.Y), int32(delogo.Rect.W), int32(delogo.Rect.H)).Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
 			}
@@ -233,7 +234,7 @@ func (tc *Transcode) SimpleJPEG(ctx context.Context, params *TranscodeParams) er
 		// 添加水印
 		if logos := sub.Filters.Logo; len(logos) > 0 {
 			for _, logo := range logos {
-				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).Use(lastFilter)
+				flogo := filter.Overlay(fsugar.LogoPos(int32(logo.Dx), int32(logo.Dy), logo.Pos)).Use(lastFilter)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
 				lastFilter = flogo
@@ -322,7 +323,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 		if delogos := params.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
 				fdelogo := filter.Delogo(
-					int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).
+					int32(delogo.Rect.X), int32(delogo.Rect.Y), int32(delogo.Rect.W), int32(delogo.Rect.H)).
 					Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
@@ -351,7 +352,7 @@ func (tc *Transcode) SimpleHLS(ctx context.Context, params *TranscodeSimpleHLSPa
 				} else {
 					finalLogoStream = logoStream
 				}
-				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
+				flogo := filter.Overlay(fsugar.LogoPos(int32(logo.Dx), int32(logo.Dy), logo.Pos)).
 					Use(lastFilter, finalLogoStream)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))
@@ -424,7 +425,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 		if delogos := params.Filters.Delogo; len(delogos) > 0 {
 			for _, delogo := range delogos {
 				fdelogo := filter.Delogo(
-					int64(delogo.Rect.X), int64(delogo.Rect.Y), int64(delogo.Rect.W), int64(delogo.Rect.H)).
+					int32(delogo.Rect.X), int32(delogo.Rect.Y), int32(delogo.Rect.W), int32(delogo.Rect.H)).
 					Use(lastFilter)
 				filters = append(filters, fdelogo)
 				lastFilter = fdelogo
@@ -453,7 +454,7 @@ func (tc *Transcode) SimpleTS(ctx context.Context, params *TranscodeSimpleTSPara
 				} else {
 					finalLogoStream = logoStream
 				}
-				flogo := filter.Logo(int64(logo.Dx), int64(logo.Dy), filter.LogoPos(logo.Pos)).
+				flogo := filter.Overlay(fsugar.LogoPos(int32(logo.Dx), int32(logo.Dy), logo.Pos)).
 					Use(lastFilter, finalLogoStream)
 				filters = append(filters, flogo)
 				inputs = append(inputs, input.WithSimple(logo.File))

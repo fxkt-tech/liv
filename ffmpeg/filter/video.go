@@ -9,52 +9,32 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-type LogoPos string
+type Expr interface {
+	Numb | ~string
+}
 
-const (
-	LogoTopLeft     LogoPos = "TopLeft"
-	LogoTopRight    LogoPos = "TopRight"
-	LogoBottomRight LogoPos = "BottomRight"
-	LogoBottomLeft  LogoPos = "BottomLeft"
-)
-
-// 贴logo
-func Logo(dx, dy int64, pos LogoPos) Filter {
-	var content string
-	switch pos {
-	case LogoTopLeft:
-		content = fmt.Sprintf("overlay=%d:%d", dx, dy)
-	case LogoTopRight:
-		content = fmt.Sprintf("overlay=W-w-%d:%d", dx, dy)
-	case LogoBottomRight:
-		content = fmt.Sprintf("overlay=W-w-%d:H-h-%d", dx, dy)
-	case LogoBottomLeft:
-		content = fmt.Sprintf("overlay=%d:H-h-%d", dx, dy)
-	}
-	return &single{
-		name:    naming.Default.Gen(),
-		content: content,
-	}
+type Numb interface {
+	~int32 | ~int
 }
 
 // 一个图像覆盖另一个图像
-func Overlay[T constraints.Signed | string](dx, dy T) Filter {
-	return &single{
+func Overlay[T Expr](dx, dy T) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("overlay=%v:%v", dx, dy),
 	}
 }
 
-// 一个图像覆盖另一个图像（可激活某一时间段）
-func OverlayWithEnable[T constraints.Signed | string](dx, dy T, enable string) Filter {
-	return &single{
+// Deprecated: 一个图像覆盖另一个图像（可激活某一时间段）
+func OverlayWithEnable[T Expr](dx, dy T, enable string) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("overlay=%v:%v:enable='%s'", dx, dy, enable),
 	}
 }
 
 // 缩放
-func Scale[T int32 | int | string](w, h T) Filter {
+func Scale[T Expr](w, h T) *SingleFilter {
 	var ww, hh any = w, h
 	switch ww.(type) {
 	case int32:
@@ -64,22 +44,22 @@ func Scale[T int32 | int | string](w, h T) Filter {
 	case string:
 		ww, hh = w, h
 	}
-	return &single{
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("scale=%v:%v", ww, hh),
 	}
 }
 
-// func UnsopportedSimple(fstr string) Filter {
-// 	return &single{
+// func UnsopportedSimple(fstr string) *SingleFilter {
+// 	return &SingleFilter{
 // 		name:    naming.Default.Gen(),
 // 		content: fstr,
 // 	}
 // }
 
 // 绿幕抠像
-func Chromakey(color string, similarity, blend float32) Filter {
-	return &single{
+func Chromakey(color string, similarity, blend float32) *SingleFilter {
+	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf(
 			"chromakey=%s:%.2f:%.2f",
@@ -89,8 +69,8 @@ func Chromakey(color string, similarity, blend float32) Filter {
 }
 
 // 创建一个底版
-func Color(c string, w, h int32, d float32) Filter {
-	return &single{
+func Color(c string, w, h int32, d float32) *SingleFilter {
+	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf(
 			"color=c=%s:s=%d*%d:d=%.2f",
@@ -100,35 +80,26 @@ func Color(c string, w, h int32, d float32) Filter {
 }
 
 // 裁切
-func Crop(x, y, w, h int32) Filter {
-	return &single{
+func Crop[T Expr](x, y, w, h T) *SingleFilter {
+	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf(
-			"crop=%d:%d:%d:%d",
+			"crop=%v:%v:%v:%v",
 			x, y, w, h,
 		),
 	}
 }
 
 // 视频帧显示时间戳
-func SetPTS(expr string) Filter {
-	return &single{
+func SetPTS(expr string) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("setpts=%s", expr),
 	}
 }
 
-// 视频流复制成多份
-func Split(n int) Filter {
-	return &multiple{
-		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("split=%d", n),
-		counts:  n,
-	}
-}
-
 // 截取某一时间段
-func Trim(s, e float64) Filter {
+func Trim(s, e float64) *SingleFilter {
 	var ps []string
 	if s != 0 {
 		ps = append(ps, fmt.Sprintf("start=%f", s))
@@ -141,15 +112,15 @@ func Trim(s, e float64) Filter {
 	if psstr != "" {
 		eqs = "="
 	}
-	return &single{
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("trim%s%s", eqs, psstr),
 	}
 }
 
-// 擦除logo
-func Delogo(x, y, w, h int64) Filter {
-	return &single{
+// Deprecated: 擦除logo
+func Delogo_Old(x, y, w, h int32) *SingleFilter {
+	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf("delogo=%d:%d:%d:%d",
 			x+1, y+1, w-2, h-2,
@@ -157,29 +128,50 @@ func Delogo(x, y, w, h int64) Filter {
 	}
 }
 
-func Select(expr string) Filter {
-	return &single{
+// 遮标
+func Delogo[T Numb](x, y, w, h T) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v",
+			x+1, y+1, w-2, h-2,
+		),
+	}
+}
+
+func Select(expr string) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("select=%s", expr),
 	}
 }
 
-func FPS[N, D constraints.Integer | constraints.Float](fps *math.Rational[N, D]) Filter {
+func FPS[N, D constraints.Integer | constraints.Float](fps *math.Rational[N, D]) *SingleFilter {
 	var s string
 	if fps.Den == 0 {
 		s = "source_fps"
 	} else {
 		s = fmt.Sprintf("%v/%v", fps.Num, fps.Den)
 	}
-	return &single{
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("fps=fps=%s", s),
 	}
 }
 
-func Tile(xlen, ylen int32) Filter {
-	return &single{
+func Tile(xlen, ylen int32) *SingleFilter {
+	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("tile=%d*%d", xlen, ylen),
+	}
+}
+
+// multi
+
+// 视频流复制成多份
+func Split(n int) *MultiFilter {
+	return &MultiFilter{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("split=%d", n),
+		counts:  n,
 	}
 }
