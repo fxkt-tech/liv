@@ -34,7 +34,7 @@ type ConcatParams struct {
 	Infiles    []string
 	ConcatFile string // eg. mylist.txt
 	Outfile    string
-	Duration   float64
+	Duration   float32
 }
 
 type ExtractAudioParams struct {
@@ -89,10 +89,10 @@ type Audio struct {
 type Logo struct {
 	File string  `json:"file,omitempty"`
 	Pos  string  `json:"pos,omitempty"`
-	Dx   float64 `json:"dx,omitempty"`
-	Dy   float64 `json:"dy,omitempty"`
-	LW   float64 `json:"lw,omitempty"`
-	LH   float64 `json:"lh,omitempty"`
+	Dx   float32 `json:"dx,omitempty"`
+	Dy   float32 `json:"dy,omitempty"`
+	LW   float32 `json:"lw,omitempty"`
+	LH   float32 `json:"lh,omitempty"`
 }
 
 func (l *Logo) NeedScale() bool {
@@ -101,20 +101,20 @@ func (l *Logo) NeedScale() bool {
 
 // 矩形框
 type Rectangle struct {
-	X float64 `json:"x,omitempty"`
-	Y float64 `json:"y,omitempty"`
-	W float64 `json:"w,omitempty"`
-	H float64 `json:"h,omitempty"`
+	X float32 `json:"x,omitempty"`
+	Y float32 `json:"y,omitempty"`
+	W float32 `json:"w,omitempty"`
+	H float32 `json:"h,omitempty"`
 }
 
 type Delogo struct {
-	SS   float64    `json:"ss,omitempty"`
+	SS   float32    `json:"ss,omitempty"`
 	Rect *Rectangle `json:"rect,omitempty"`
 }
 
 type Clip struct {
-	Seek     float64 `json:"seek,omitempty"`
-	Duration float64 `json:"duration,omitempty"`
+	Seek     float32 `json:"seek,omitempty"`
+	Duration float32 `json:"duration,omitempty"`
 }
 
 type HLS struct {

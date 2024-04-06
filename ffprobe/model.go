@@ -12,7 +12,7 @@ type ProbeStream struct {
 	CodecName string  `json:"codec_name,omitempty"`
 	Profile   string  `json:"profile,omitempty"`
 	BitRate   int32   `json:"bit_rate,omitempty,string"`
-	Duration  float64 `json:"duration,omitempty,string"`
+	Duration  float32 `json:"duration,omitempty,string"`
 
 	// video
 	Width      int32  `json:"width,omitempty"`
@@ -34,5 +34,5 @@ type ProbeStream struct {
 type ProbeFormat struct {
 	FormatName string  `json:"format_name,omitempty"`
 	Size       int64   `json:"size,omitempty,string"`
-	Duration   float64 `json:"duration,omitempty,string"`
+	Duration   float32 `json:"duration,omitempty,string"`
 }

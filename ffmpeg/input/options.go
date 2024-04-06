@@ -14,13 +14,13 @@ func VideoCodec(cv string) Option {
 	}
 }
 
-func StartTime(ss float64) Option {
+func StartTime(ss float32) Option {
 	return func(o *Input) {
 		o.ss = ss
 	}
 }
 
-func Duration(t float64) Option {
+func Duration(t float32) Option {
 	return func(o *Input) {
 		o.t = t
 	}

@@ -1,6 +1,7 @@
 package output
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -20,8 +21,8 @@ type Output struct {
 	threads               int32    // thread counts, default 4.
 	max_muxing_queue_size int32    // queue size when muxing, default 4086.
 	movflags              string   // location of mp4 moov.
-	ss                    float64  // ss is start_time.
-	t                     float64  // t is duration.
+	ss                    float32  // ss is start_time.
+	t                     float32  // t is duration.
 	f                     string   // f is -f format.
 	file                  string
 	var_stream_map        string
@@ -151,10 +152,10 @@ func (o *Output) Params() (params []string) {
 		params = append(params, "-movflags", o.movflags)
 	}
 	if o.ss != 0 {
-		params = append(params, "-ss", strconv.FormatFloat(o.ss, 'f', -1, 64))
+		params = append(params, "-ss", fmt.Sprintf("%f", o.ss))
 	}
 	if o.t != 0 {
-		params = append(params, "-t", strconv.FormatFloat(o.t, 'f', -1, 64))
+		params = append(params, "-t", fmt.Sprintf("%f", o.t))
 	}
 	if o.f != "" {
 		params = append(params, "-f", o.f)

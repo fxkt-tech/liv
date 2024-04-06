@@ -25,11 +25,18 @@ func Overlay[T Expr](dx, dy T) *SingleFilter {
 	}
 }
 
-// Deprecated: 一个图像覆盖另一个图像（可激活某一时间段）
+// 一个图像覆盖另一个图像（可激活某一时间段）
 func OverlayWithEnable[T Expr](dx, dy T, enable string) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
 		content: fmt.Sprintf("overlay=%v:%v:enable='%s'", dx, dy, enable),
+	}
+}
+
+func OverlayWithTime[T Expr](dx, dy T, t float32) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("overlay=%v:%v:t=%f", dx, dy, t),
 	}
 }
 
@@ -99,7 +106,7 @@ func SetPTS(expr string) *SingleFilter {
 }
 
 // 截取某一时间段
-func Trim(s, e float64) *SingleFilter {
+func Trim(s, e float32) *SingleFilter {
 	var ps []string
 	if s != 0 {
 		ps = append(ps, fmt.Sprintf("start=%f", s))

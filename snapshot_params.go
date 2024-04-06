@@ -3,7 +3,7 @@ package liv
 type SnapshotParams struct {
 	Infile    string
 	Outfile   string
-	StartTime float64
+	StartTime float32
 	Interval  int32
 	Num       int32
 	FrameType int32 // 0-仅关键帧 1-指定时间点的帧
@@ -18,13 +18,13 @@ type SpriteParams struct {
 	YLen     int32
 	Width    int32
 	Height   int32
-	Interval float64
+	Interval float32
 }
 
 type SVGMarkParams struct {
 	Infile      string
 	Outfile     string
-	StartTime   float64          `json:"start_time,omitempty"`
+	StartTime   float32          `json:"start_time,omitempty"`
 	Annotations []*SVGAnnotation `json:"annotation,omitempty"`
 }
 
@@ -40,6 +40,6 @@ type SVGAnnotation struct {
 }
 
 type Point struct {
-	X float64 `json:"x,omitempty"`
-	Y float64 `json:"y,omitempty"`
+	X float32 `json:"x,omitempty"`
+	Y float32 `json:"y,omitempty"`
 }

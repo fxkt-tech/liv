@@ -90,7 +90,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 
 func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 	var (
-		duration = float64(params.XLen*params.YLen) * params.Interval
+		duration = float32(params.XLen*params.YLen) * params.Interval
 		frames   = params.XLen * params.YLen
 	)
 
@@ -179,14 +179,14 @@ func (ss *Snapshot) SVGMark(ctx context.Context, params *SVGMarkParams) error {
 	for _, annotation := range params.Annotations {
 		switch annotation.Type {
 		case "rect":
-			fromx := int(annotation.FromPoint.X * float64(vstream.Width))
-			fromy := int(annotation.FromPoint.Y * float64(vstream.Height))
-			tox := int(annotation.ToPoint.X * float64(vstream.Width))
-			toy := int(annotation.ToPoint.Y * float64(vstream.Height))
-			minx := int(min(float64(fromx), float64(tox)))
-			miny := int(min(float64(fromy), float64(toy)))
-			w := int(math.Abs(float64(fromx - tox)))
-			h := int(math.Abs(float64(fromy - toy)))
+			fromx := int(annotation.FromPoint.X * float32(vstream.Width))
+			fromy := int(annotation.FromPoint.Y * float32(vstream.Height))
+			tox := int(annotation.ToPoint.X * float32(vstream.Width))
+			toy := int(annotation.ToPoint.Y * float32(vstream.Height))
+			minx := int(min(float32(fromx), float32(tox)))
+			miny := int(min(float32(fromy), float32(toy)))
+			w := int(math.Abs(float32(fromx - tox)))
+			h := int(math.Abs(float32(fromy - toy)))
 			styles := []string{"fill:transparent"}
 			if annotation.Stroke != "" {
 				styles = append(styles, fmt.Sprintf("stroke:%s", annotation.Stroke))
@@ -199,8 +199,8 @@ func (ss *Snapshot) SVGMark(ctx context.Context, params *SVGMarkParams) error {
 			var d string
 			plen := len(annotation.Points)
 			for i, point := range annotation.Points {
-				x := int(point.X * float64(vstream.Width))
-				y := int(point.Y * float64(vstream.Height))
+				x := int(point.X * float32(vstream.Width))
+				y := int(point.Y * float32(vstream.Height))
 				if i == 0 {
 					d = fmt.Sprintf("%sM%d %d ", d, x, y)
 				} else if i == plen-1 {
@@ -232,10 +232,10 @@ func (ss *Snapshot) SVGMark(ctx context.Context, params *SVGMarkParams) error {
 			for i, point := range unitPoints {
 				orix := point.X
 				oriy := point.Y
-				fromx := annotation.FromPoint.X * float64(vstream.Width)
-				fromy := annotation.FromPoint.Y * float64(vstream.Height)
-				tox := annotation.ToPoint.X * float64(vstream.Width)
-				toy := annotation.ToPoint.Y * float64(vstream.Height)
+				fromx := annotation.FromPoint.X * float32(vstream.Width)
+				fromy := annotation.FromPoint.Y * float32(vstream.Height)
+				tox := annotation.ToPoint.X * float32(vstream.Width)
+				toy := annotation.ToPoint.Y * float32(vstream.Height)
 				// 根据变换矩阵，变换后的点坐标(A, B)为
 				// A = a(x2 - x1) - b(y2 - y1) + x1
 				// B = a(y2 - y1) + b(x2 - x1) + y1
@@ -259,8 +259,8 @@ func (ss *Snapshot) SVGMark(ctx context.Context, params *SVGMarkParams) error {
 			canvas.Path(d, strings.Join(styles, ";"))
 
 		case "text":
-			fromx := int(annotation.FromPoint.X * float64(vstream.Width))
-			fromy := int(annotation.FromPoint.Y * float64(vstream.Height))
+			fromx := int(annotation.FromPoint.X * float32(vstream.Width))
+			fromy := int(annotation.FromPoint.Y * float32(vstream.Height))
 			var styles []string
 			if annotation.Stroke != "" {
 				styles = append(styles, fmt.Sprintf("fill:%s", annotation.Stroke))

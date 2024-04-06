@@ -82,13 +82,13 @@ func Metadata(k, v string) Option {
 	}
 }
 
-func StartTime(ss float64) Option {
+func StartTime(ss float32) Option {
 	return func(o *Output) {
 		o.ss = ss
 	}
 }
 
-func Duration(t float64) Option {
+func Duration(t float32) Option {
 	return func(o *Output) {
 		o.t = t
 	}

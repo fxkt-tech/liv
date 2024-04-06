@@ -11,15 +11,15 @@ import (
 type Input struct {
 	idx int
 
-	cv       string
-	r        string
-	safe     string
-	i        string   // i is input file.
-	ss       float64  // ss is start_time.
-	t        float64  // t is duration.
-	metadata []string // kv pair.
-	f        string   // format
-	// ext []string // extra params.
+	cv        string
+	r         string
+	safe      string
+	ss        float32  // ss is start_time.
+	t         float32  // t is duration.
+	itsoffset float32  // offset
+	metadata  []string // kv pair.
+	f         string   // format
+	i         string   // i is input file.
 }
 
 func New(opts ...Option) *Input {
@@ -42,7 +42,7 @@ func WithMetadata(i string, kvs []string) *Input {
 	return &Input{i: i, metadata: kvs}
 }
 
-func WithTime(ss, t float64, i string) *Input {
+func WithTime(ss, t float32, i string) *Input {
 	return &Input{
 		ss: ss,
 		t:  t,
@@ -81,6 +81,9 @@ func (i *Input) Params() (params []string) {
 	}
 	if i.t != 0 {
 		params = append(params, "-t", fmt.Sprintf("%.6f", i.t))
+	}
+	if i.itsoffset != 0 {
+		params = append(params, "-itsoffset", fmt.Sprintf("%.6f", i.itsoffset))
 	}
 	if i.f != "" {
 		params = append(params, "-f", i.f)
