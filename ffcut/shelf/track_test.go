@@ -84,9 +84,9 @@ func TestExec(t *testing.T) {
 				Append(
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
-						SetSelection(0, 5000).
-						SetSection(0, 5000).
-						SetItemSize(540, 960).
+						SetSelection(0, 10000).
+						SetSection(0, 10000).
+						SetItemSize(960, 540).
 						SetPosition(600, 600),
 				),
 			shelf.NewTrack(shelf.TrackTypeVideo).
@@ -95,13 +95,13 @@ func TestExec(t *testing.T) {
 						SetAssetId(`in.mp4`).
 						SetSelection(8000, 2000).
 						SetSection(1000, 3000).
-						SetItemSize(540, 960).
+						SetItemSize(1920, 1080).
 						SetPosition(0, 0),
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
 						SetSelection(20000, 2000).
 						SetSection(3000, 5000).
-						SetItemSize(540, 960).
+						SetItemSize(1920, 1080).
 						SetPosition(100, 50),
 				),
 		).

@@ -16,6 +16,7 @@ func ASplit(n int) *MultiFilter {
 	}
 }
 
+// 音频倍速
 func ATempo[T constraints.Integer | constraints.Float | string](expr T) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
@@ -34,7 +35,7 @@ func ASetPTS(expr string) *SingleFilter {
 func AMix(inputs int32) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("amix=inputs=%d", inputs),
+		content: fmt.Sprintf("amix=inputs=%d:duration=first", inputs),
 	}
 }
 
@@ -45,9 +46,16 @@ func Loudnorm(i, tp int32) *SingleFilter {
 	}
 }
 
-func ADelay(delays int32) *SingleFilter {
+func ADelay(delays float32) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("adelay=delays=%ds:all=1", delays),
+		content: fmt.Sprintf("adelay=delays=%fs:all=1", delays),
+	}
+}
+
+func ANullSrc(duration float32) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("anullsrc=d=%f", duration),
 	}
 }

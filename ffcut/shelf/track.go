@@ -2,11 +2,11 @@ package shelf
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/fxkt-tech/liv/ffmpeg"
 	"github.com/fxkt-tech/liv/ffmpeg/codec"
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
+	"github.com/fxkt-tech/liv/ffmpeg/filter/fsugar"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/internal/conv"
@@ -111,6 +111,18 @@ func (d *TrackData) Sort() {
 	}
 }
 
+func (d *TrackData) MaxDuration() float32 {
+	var maxDuration float32
+	for _, track := range d.tracks {
+		for _, item := range track.Items {
+			if sectionTo := conv.MillToF32(item.Section.To); maxDuration < sectionTo {
+				maxDuration = sectionTo
+			}
+		}
+	}
+	return maxDuration
+}
+
 func (d *TrackData) Exec() error {
 	var (
 		ff = ffmpeg.New(
@@ -118,34 +130,75 @@ func (d *TrackData) Exec() error {
 			ffmpeg.WithDebug(true),
 		)
 
+		maxDuration = d.MaxDuration()
+
 		// 辅助性质的背景板，用于视频流
-		bg = filter.Color("black", d.stageWidth, d.stageHeight, 5)
+		bg = filter.Color("black", d.stageWidth, d.stageHeight, maxDuration)
+		// 辅助性质的背景板，用于音频流
+		abg = filter.ANullSrc(maxDuration)
 
 		// 舞台
 		stage = bg
 		// 音响
-		// sound *filter.SingleFilter
+		sound = abg
 	)
-	ff.AddFilter(bg)
+	ff.AddFilter(bg, abg)
+
 	for i := len(d.tracks) - 1; i >= 0; i-- {
 		switch d.tracks[i].Type {
 		case TrackTypeVideo:
 			for _, item := range d.tracks[i].Items {
-				iVideo := input.WithTime(conv.MillToF32(item.StartTime), conv.MillToF32(item.Duration), item.AssetId)
-				// iVideo := input.WithSimple(item.AssetId)
-				// fTrim := filter.Trim(conv.MillToF32(item.Section.From), conv.MillToF32(item.Section.To)).Use(iVideo.V())
-				fSetPTS := filter.SetPTS(fmt.Sprintf("PTS+%f/TB", conv.MillToF32(item.Section.From)))
-				fOverlay := filter.OverlayWithEnable(
-					item.Position.X, item.Position.Y,
-					fmt.Sprintf("between(t,%f,%f)", conv.MillToF32(item.Section.From), conv.MillToF32(item.Section.To)),
-				).Use(stage, fSetPTS)
+				var (
+					startTime = conv.MillToF32(item.StartTime)
+					duration  = conv.MillToF32(item.Duration)
+					from      = conv.MillToF32(item.Section.From)
+					to        = conv.MillToF32(item.Section.To)
+					w, h      = item.Width, item.Height
+					x, y      = item.Position.X, item.Position.Y
+				)
+
+				// 处理视频流
+				iVideo := input.WithTime(startTime, duration, item.AssetId)
+				fScale := filter.Scale(w, h).Use(iVideo.V())
+				fSetPTS := filter.SetPTS(fsugar.PTSOffset(from)).Use(fScale)
+				fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(from, to)).Use(stage, fSetPTS)
+
 				ff.AddInput(iVideo)
-				ff.AddFilter(fSetPTS, fOverlay)
+				ff.AddFilter(fScale, fSetPTS, fOverlay)
 
 				// 每完成一步的结果就是当前舞台的模样
 				stage = fOverlay
+
+				// 处理音频流
+				fADelay := filter.ADelay(from).Use(iVideo.A())
+				fAMix := filter.AMix(2).Use(sound, fADelay)
+
+				ff.AddFilter(fADelay, fAMix)
+
+				// 每完成一步的结果就是当前音响的效果
+				sound = fAMix
 			}
 		case TrackTypeAudio:
+			for _, item := range d.tracks[i].Items {
+				var (
+					startTime = conv.MillToF32(item.StartTime)
+					duration  = conv.MillToF32(item.Duration)
+					from      = conv.MillToF32(item.Section.From)
+				)
+
+				// 处理视频流
+				iAudio := input.WithTime(startTime, duration, item.AssetId)
+
+				// 处理音频流
+				fADelay := filter.ADelay(from).Use(iAudio.A())
+				fAMix := filter.AMix(2).Use(sound, fADelay)
+
+				ff.AddInput(iAudio)
+				ff.AddFilter(fADelay, fAMix)
+
+				// 每完成一步的结果就是当前音响的效果
+				sound = fAMix
+			}
 		case TrackTypeTitle:
 		case TrackTypeSubtitle:
 		}
@@ -153,9 +206,9 @@ func (d *TrackData) Exec() error {
 
 	ff.AddOutput(output.New(
 		output.Map(stage),
-		// output.Map(sound),
+		output.Map(sound),
 		output.VideoCodec(codec.X264),
-		// output.AudioCodec(codec.AAC),
+		output.AudioCodec(codec.AAC),
 		output.AudioCodec(codec.Nope),
 		output.File("out_test.mp4"),
 	))

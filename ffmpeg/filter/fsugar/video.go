@@ -27,3 +27,11 @@ func LogoPos[T filter.Expr](dx, dy T, pos string) (string, string) {
 	}
 	return "", ""
 }
+
+func TimeBetween(from, to float32) string {
+	return fmt.Sprintf("between(t,%f,%f)", from, to)
+}
+
+func PTSOffset(duration float32) string {
+	return fmt.Sprintf("PTS+%f/TB", duration)
+}
