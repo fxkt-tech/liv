@@ -1,9 +1,10 @@
 package liv
 
 type ConvertContainerParams struct {
-	InFile  string
-	OutFile string
-	Threads int32
+	InFile   string
+	OutFile  string
+	Metadata []*KV
+	Threads  int32
 }
 
 type TranscodeParams struct {

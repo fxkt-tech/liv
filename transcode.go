@@ -283,6 +283,8 @@ func (tc *Transcode) ConvertContainer(ctx context.Context, params *ConvertContai
 		output.MaxMuxingQueueSize(4086),
 		output.File(params.OutFile),
 	}
+	outputOpts = append(outputOpts, metadataOptionFromKV(params.Metadata)...)
+
 	outputs = append(outputs, output.New(outputOpts...))
 
 	return ffmpeg.New(tc.ffmpegOpts...).
