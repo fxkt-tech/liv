@@ -129,6 +129,7 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 
 	filters = append(filters, filterFPS, filterScale, filterTile)
 	outputOptions = append(outputOptions,
+		output.Map(filterTile.S()),
 		output.File(params.Outfile),
 	)
 

@@ -12,8 +12,11 @@ func main() {
 	var (
 		ctx    = context.Background()
 		params = &liv.ConvertContainerParams{
-			InFile:  "../../testdata/in.mp4",
+			InFile:  "../../../testdata/in.mp4",
 			OutFile: "out-convert-container.mp4",
+			Metadata: []*liv.KV{
+				{K: "comment", V: "xx"},
+			},
 		}
 	)
 
