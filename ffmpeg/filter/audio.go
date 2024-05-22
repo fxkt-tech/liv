@@ -56,6 +56,6 @@ func ADelay(delays float32) *SingleFilter {
 func ANullSrc(duration float32) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("anullsrc=d=%f", duration),
+		content: fmt.Sprintf("anullsrc=r=44100:d=%fs", duration),
 	}
 }

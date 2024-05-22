@@ -35,3 +35,7 @@ func TimeBetween(from, to float32) string {
 func PTSOffset(duration float32) string {
 	return fmt.Sprintf("PTS+%f/TB", duration)
 }
+
+func PTSSpeed(speed float32) string {
+	return fmt.Sprintf("1/%f*PTS", speed)
+}

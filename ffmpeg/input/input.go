@@ -16,6 +16,7 @@ type Input struct {
 	safe      string
 	ss        float32  // ss is start_time.
 	t         float32  // t is duration.
+	to        float32  // to is to time.
 	itsoffset float32  // offset
 	metadata  []string // kv pair.
 	f         string   // format
@@ -46,6 +47,14 @@ func WithTime(ss, t float32, i string) *Input {
 	return &Input{
 		ss: ss,
 		t:  t,
+		i:  i,
+	}
+}
+
+func WithTimeTo(ss, to float32, i string) *Input {
+	return &Input{
+		ss: ss,
+		to: to,
 		i:  i,
 	}
 }
@@ -81,6 +90,9 @@ func (i *Input) Params() (params []string) {
 	}
 	if i.t != 0 {
 		params = append(params, "-t", fmt.Sprintf("%.6f", i.t))
+	}
+	if i.to != 0 {
+		params = append(params, "-to", fmt.Sprintf("%.6f", i.to))
 	}
 	if i.itsoffset != 0 {
 		params = append(params, "-itsoffset", fmt.Sprintf("%.6f", i.itsoffset))

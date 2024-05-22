@@ -166,11 +166,13 @@ func (i *TrackItem) SetAssetId(assetId string) *TrackItem {
 	return i
 }
 
+// 时间线上的起点和持续时间
 func (i *TrackItem) SetSelection(startTime, duration int32) *TrackItem {
 	i.Selection = Selection{StartTime: startTime, Duration: duration}
 	return i
 }
 
+// 截取原视频的视频段
 func (i *TrackItem) SetSection(from, to int32) *TrackItem {
 	i.Section = &Section{From: from, To: to}
 	return i

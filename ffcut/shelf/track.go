@@ -115,7 +115,7 @@ func (d *TrackData) MaxDuration() float32 {
 	var maxDuration float32
 	for _, track := range d.tracks {
 		for _, item := range track.Items {
-			if sectionTo := conv.MillToF32(item.Section.To); maxDuration < sectionTo {
+			if sectionTo := conv.MillToF32(item.Selection.StartTime + item.Selection.Duration); maxDuration < sectionTo {
 				maxDuration = sectionTo
 			}
 		}
@@ -147,7 +147,7 @@ func (d *TrackData) Exec() error {
 	for i := len(d.tracks) - 1; i >= 0; i-- {
 		switch d.tracks[i].Type {
 		case TrackTypeVideo:
-			for _, item := range d.tracks[i].Items {
+			for i, item := range d.tracks[i].Items {
 				var (
 					startTime = conv.MillToF32(item.StartTime)
 					duration  = conv.MillToF32(item.Duration)
@@ -155,28 +155,34 @@ func (d *TrackData) Exec() error {
 					to        = conv.MillToF32(item.Section.To)
 					w, h      = item.Width, item.Height
 					x, y      = item.Position.X, item.Position.Y
+					speed     = (to - from) / duration
 				)
 
+				// 截取当前素材段
+				iAsset := input.WithTimeTo(from, to, item.AssetId)
+				ff.AddInput(iAsset)
+
 				// 处理视频流
-				iVideo := input.WithTime(startTime, duration, item.AssetId)
-				fScale := filter.Scale(w, h).Use(iVideo.V())
-				fSetPTS := filter.SetPTS(fsugar.PTSOffset(from)).Use(fScale)
-				fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(from, to)).Use(stage, fSetPTS)
+				fScale := filter.Scale(w, h).Use(iAsset.V())
+				fSpeed := filter.SetPTS(fsugar.PTSSpeed(speed)).Use(fScale)
+				fSetPTS := filter.SetPTS(fsugar.PTSOffset(startTime)).Use(fSpeed)
+				fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(startTime, startTime+duration)).Use(stage, fSetPTS)
 
-				ff.AddInput(iVideo)
-				ff.AddFilter(fScale, fSetPTS, fOverlay)
+				ff.AddFilter(fScale, fSpeed, fSetPTS, fOverlay)
 
-				// 每完成一步的结果就是当前舞台的模样
-				stage = fOverlay
+				stage = fOverlay // 每完成一步的结果就是当前舞台的模样
 
-				// 处理音频流
-				fADelay := filter.ADelay(from).Use(iVideo.A())
-				fAMix := filter.AMix(2).Use(sound, fADelay)
+				if i == 2 {
+					// 处理音频流
+					fAtempo := filter.ATempo(speed).Use(iAsset.A())
+					fADelay := filter.ADelay(startTime).Use(fAtempo)
+					fAMix := filter.AMix(2).Use(sound, fADelay)
 
-				ff.AddFilter(fADelay, fAMix)
+					ff.AddFilter(fAtempo, fADelay, fAMix)
 
-				// 每完成一步的结果就是当前音响的效果
-				sound = fAMix
+					sound = fAMix // 每完成一步的结果就是当前音响的效果
+				}
+
 			}
 		case TrackTypeAudio:
 			for _, item := range d.tracks[i].Items {
@@ -184,17 +190,20 @@ func (d *TrackData) Exec() error {
 					startTime = conv.MillToF32(item.StartTime)
 					duration  = conv.MillToF32(item.Duration)
 					from      = conv.MillToF32(item.Section.From)
+					to        = conv.MillToF32(item.Section.To)
+					speed     = (to - from) / duration
 				)
 
-				// 处理视频流
-				iAudio := input.WithTime(startTime, duration, item.AssetId)
+				// 截取当前素材段
+				iAsset := input.WithTime(startTime, duration, item.AssetId)
 
 				// 处理音频流
-				fADelay := filter.ADelay(from).Use(iAudio.A())
+				fADelay := filter.ADelay(startTime).Use(iAsset.A())
+				fAtempo := filter.ATempo(speed).Use(fADelay)
 				fAMix := filter.AMix(2).Use(sound, fADelay)
 
-				ff.AddInput(iAudio)
-				ff.AddFilter(fADelay, fAMix)
+				ff.AddInput(iAsset)
+				ff.AddFilter(fADelay, fAtempo, fAMix)
 
 				// 每完成一步的结果就是当前音响的效果
 				sound = fAMix
@@ -209,7 +218,7 @@ func (d *TrackData) Exec() error {
 		output.Map(sound),
 		output.VideoCodec(codec.X264),
 		output.AudioCodec(codec.AAC),
-		output.AudioCodec(codec.Nope),
+		// output.AudioCodec(codec.Nope),
 		output.File("out_test.mp4"),
 	))
 	err := ff.Run(d.ctx)

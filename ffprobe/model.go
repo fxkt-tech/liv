@@ -17,6 +17,7 @@ type ProbeStream struct {
 	// video
 	Width      int32  `json:"width,omitempty"`
 	Height     int32  `json:"height,omitempty"`
+	HasBFrames int32  `json:"has_b_frames,omitempty"`
 	PixFmt     string `json:"pix_fmt,omitempty"`
 	Level      int32  `json:"level,omitempty"`
 	RFrameRate string `json:"r_frame_rate,omitempty"`

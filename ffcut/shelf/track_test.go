@@ -113,3 +113,107 @@ func TestExec(t *testing.T) {
 	// fmt.Println(trackData)
 	// t.Log(json.Pretty([]byte(trackData)))
 }
+
+func TestExec2(t *testing.T) {
+	filename := "/Users/justyer/Desktop/in.mp4"
+	err := shelf.New(
+		// shelf.WithStageSize(540, 960),
+		shelf.WithStageSize(1080, 1920),
+	).
+		AppendTrack(
+			// 添加视频轨
+			// shelf.NewTrack(shelf.TrackTypeVideo).
+			// 	Append(
+			// 		shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+			// 			SetAssetId(`in.mp4`).
+			// 			SetSelection(0, 10000).
+			// 			SetSection(0, 10000).
+			// 			SetItemSize(960, 540).
+			// 			SetPosition(600, 600),
+			// 	),
+			shelf.NewTrack(shelf.TrackTypeVideo).
+				Append(
+					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+						SetAssetId(filename).
+						SetSelection(0, 4760).
+						SetSection(0, 5950).
+						SetItemSize(1080, 1920).
+						SetPosition(0, 0),
+					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+						SetAssetId(filename).
+						SetSelection(4760, 7960).
+						SetSection(5920, 13880).
+						SetItemSize(1080, 1920).
+						SetPosition(0, 0),
+					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+						SetAssetId(filename).
+						SetSelection(12720, 6120).
+						SetSection(13880, 20000).
+						SetItemSize(1080, 1920).
+						SetPosition(0, 0),
+				),
+		).
+		Exec() // 导出
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// fmt.Println(trackData)
+	// t.Log(json.Pretty([]byte(trackData)))
+}
+
+func TestSpeed(t *testing.T) {
+	err := shelf.New(
+		shelf.WithStageSize(540, 960),
+		// shelf.WithStageSize(1080, 1920),
+	).
+		AppendTrack(
+			// 添加视频轨
+			shelf.NewTrack(shelf.TrackTypeVideo).
+				Append(
+					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+						SetAssetId(`in.mp4`).
+						SetSelection(0, 2000).
+						SetSection(0, 3000).
+						SetItemSize(540, 960).
+						SetPosition(0, 0),
+					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+						SetAssetId(`in.mp4`).
+						SetSelection(2000, 4000).
+						SetSection(3000, 7000).
+						SetItemSize(540, 960).
+						SetPosition(0, 0),
+					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+						SetAssetId(`in.mp4`).
+						SetSelection(6000, 2000).
+						SetSection(7000, 10000).
+						SetItemSize(540, 960).
+						SetPosition(0, 0),
+					// shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+					// 	SetAssetId(`in.mp4`).
+					// 	SetSelection(0, 3000).
+					// 	SetSection(0, 3000).
+					// 	SetItemSize(540, 960).
+					// 	SetPosition(0, 0),
+					// shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+					// 	SetAssetId(`in.mp4`).
+					// 	SetSelection(3000, 4000).
+					// 	SetSection(3000, 7000).
+					// 	SetItemSize(540, 960).
+					// 	SetPosition(0, 0),
+					// shelf.NewTrackItem(shelf.TrackItemTypeVideo).
+					// 	SetAssetId(`in.mp4`).
+					// 	SetSelection(7000, 3000).
+					// 	SetSection(7000, 10000).
+					// 	SetItemSize(540, 960).
+					// 	SetPosition(0, 0),
+				),
+		).
+		Exec() // 导出
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// fmt.Println(trackData)
+	// t.Log(json.Pretty([]byte(trackData)))
+}
