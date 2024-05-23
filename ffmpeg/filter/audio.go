@@ -49,7 +49,7 @@ func Loudnorm(i, tp int32) *SingleFilter {
 func ADelay(delays float32) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("adelay=delays=%fs:all=1", delays),
+		content: fmt.Sprintf("adelay=delays=%f:all=1", delays*1000),
 	}
 }
 

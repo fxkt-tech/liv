@@ -123,7 +123,7 @@ func (d *TrackData) MaxDuration() float32 {
 	return maxDuration
 }
 
-func (d *TrackData) Exec() error {
+func (d *TrackData) Exec(outfile string) error {
 	var (
 		ff = ffmpeg.New(
 			// ffmpeg.WithDry(true),
@@ -147,7 +147,7 @@ func (d *TrackData) Exec() error {
 	for i := len(d.tracks) - 1; i >= 0; i-- {
 		switch d.tracks[i].Type {
 		case TrackTypeVideo:
-			for i, item := range d.tracks[i].Items {
+			for _, item := range d.tracks[i].Items {
 				var (
 					startTime = conv.MillToF32(item.StartTime)
 					duration  = conv.MillToF32(item.Duration)
@@ -172,16 +172,14 @@ func (d *TrackData) Exec() error {
 
 				stage = fOverlay // 每完成一步的结果就是当前舞台的模样
 
-				if i == 2 {
-					// 处理音频流
-					fAtempo := filter.ATempo(speed).Use(iAsset.A())
-					fADelay := filter.ADelay(startTime).Use(fAtempo)
-					fAMix := filter.AMix(2).Use(sound, fADelay)
+				// 处理音频流
+				fAtempo := filter.ATempo(speed).Use(iAsset.A())
+				fADelay := filter.ADelay(startTime).Use(fAtempo)
+				fAMix := filter.AMix(2).Use(sound, fADelay)
 
-					ff.AddFilter(fAtempo, fADelay, fAMix)
+				ff.AddFilter(fAtempo, fADelay, fAMix)
 
-					sound = fAMix // 每完成一步的结果就是当前音响的效果
-				}
+				sound = fAMix // 每完成一步的结果就是当前音响的效果
 
 			}
 		case TrackTypeAudio:
@@ -219,7 +217,7 @@ func (d *TrackData) Exec() error {
 		output.VideoCodec(codec.X264),
 		output.AudioCodec(codec.AAC),
 		// output.AudioCodec(codec.Nope),
-		output.File("out_test.mp4"),
+		output.File(outfile),
 	))
 	err := ff.Run(d.ctx)
 	if err != nil {

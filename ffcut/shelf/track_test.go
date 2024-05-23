@@ -105,7 +105,7 @@ func TestExec(t *testing.T) {
 						SetPosition(100, 50),
 				),
 		).
-		Exec() // 导出
+		Exec("out_test.mp4") // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +153,7 @@ func TestExec2(t *testing.T) {
 						SetPosition(0, 0),
 				),
 		).
-		Exec() // 导出
+		Exec("out_test.mp4") // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,7 +173,7 @@ func TestSpeed(t *testing.T) {
 				Append(
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
-						SetSelection(0, 2000).
+						SetSelection(0, 2727).
 						SetSection(0, 3000).
 						SetItemSize(540, 960).
 						SetPosition(0, 0),
@@ -185,7 +185,7 @@ func TestSpeed(t *testing.T) {
 						SetPosition(0, 0),
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
-						SetSelection(6000, 2000).
+						SetSelection(6000, 2727).
 						SetSection(7000, 10000).
 						SetItemSize(540, 960).
 						SetPosition(0, 0),
@@ -209,7 +209,7 @@ func TestSpeed(t *testing.T) {
 					// 	SetPosition(0, 0),
 				),
 		).
-		Exec() // 导出
+		Exec("out_test_1_1.mp4") // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
