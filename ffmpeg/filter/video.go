@@ -80,7 +80,7 @@ func Color(c string, w, h int32, d float32) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf(
-			"color=c=%s:s=%d*%d:d=%.2f",
+			"color=c=%s:s=%d*%d:d=%.2f:r=30",
 			c, w, h, d,
 		),
 	}

@@ -162,51 +162,58 @@ func TestExec2(t *testing.T) {
 	// t.Log(json.Pretty([]byte(trackData)))
 }
 
+func F32ToMill(f float32) int32 {
+	return int32(f * 1000)
+}
+
 func TestSpeed(t *testing.T) {
+	var (
+		duration = float32(10)
+
+		speed = float32(1.2)
+
+		from1, to1 = float32(0), duration * 0.3
+		from2, to2 = to1, duration * 0.7
+		from3, to3 = to2, duration
+
+		st1, d1 = float32(0), (to1 - from1) / speed
+		st2, d2 = d1, to2 - from2
+		st3, d3 = d1 + d2, (to3 - from3) / speed
+	)
 	err := shelf.New(
 		shelf.WithStageSize(540, 960),
-		// shelf.WithStageSize(1080, 1920),
 	).
 		AppendTrack(
+			// 添加图片轨
+			// shelf.NewTrack(shelf.TrackTypeVideo).
+			// 	Append(
+			// 		shelf.NewTrackItem(shelf.TrackItemTypeImage).
+			// 			SetAssetId(`/Users/justyer/go/src/github.com/fxkt-tech/liv/fftool/mask.png`).
+			// 			SetSelection(0, 2800*2+4000).
+			// 			SetItemSize(540, 960).
+			// 			SetPosition(0, 0),
+			// 	),
 			// 添加视频轨
 			shelf.NewTrack(shelf.TrackTypeVideo).
 				Append(
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
-						SetSelection(0, 2727).
-						SetSection(0, 3000).
+						SetSelection(F32ToMill(st1), F32ToMill(d1)).
+						SetSection(F32ToMill(from1), F32ToMill(to1)).
 						SetItemSize(540, 960).
 						SetPosition(0, 0),
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
-						SetSelection(2000, 4000).
-						SetSection(3000, 7000).
+						SetSelection(F32ToMill(st2), F32ToMill(d2)).
+						SetSection(F32ToMill(from2), F32ToMill(to2)).
 						SetItemSize(540, 960).
 						SetPosition(0, 0),
 					shelf.NewTrackItem(shelf.TrackItemTypeVideo).
 						SetAssetId(`in.mp4`).
-						SetSelection(6000, 2727).
-						SetSection(7000, 10000).
+						SetSelection(F32ToMill(st3), F32ToMill(d3)).
+						SetSection(F32ToMill(from3), F32ToMill(to3)).
 						SetItemSize(540, 960).
 						SetPosition(0, 0),
-					// shelf.NewTrackItem(shelf.TrackItemTypeVideo).
-					// 	SetAssetId(`in.mp4`).
-					// 	SetSelection(0, 3000).
-					// 	SetSection(0, 3000).
-					// 	SetItemSize(540, 960).
-					// 	SetPosition(0, 0),
-					// shelf.NewTrackItem(shelf.TrackItemTypeVideo).
-					// 	SetAssetId(`in.mp4`).
-					// 	SetSelection(3000, 4000).
-					// 	SetSection(3000, 7000).
-					// 	SetItemSize(540, 960).
-					// 	SetPosition(0, 0),
-					// shelf.NewTrackItem(shelf.TrackItemTypeVideo).
-					// 	SetAssetId(`in.mp4`).
-					// 	SetSelection(7000, 3000).
-					// 	SetSection(7000, 10000).
-					// 	SetItemSize(540, 960).
-					// 	SetPosition(0, 0),
 				),
 		).
 		Exec("out_test_1_1.mp4") // 导出
