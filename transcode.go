@@ -58,6 +58,8 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 	fsplit := filter.Split(sublen)
 	filters = append(filters, fsplit)
 	for i, sub := range params.Subs {
+		outputOpts := []output.Option{}
+
 		// 处理filter
 		lastFilter := fsplit.S(i)
 
@@ -81,6 +83,9 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 			).Use(lastFilter)
 			filters = append(filters, scale)
 			lastFilter = scale
+			if sub.Filters.Video.Crf > 0 {
+				outputOpts = append(outputOpts, output.Crf(sub.Filters.Video.Crf))
+			}
 		}
 
 		// 添加水印
@@ -107,7 +112,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 		}
 
 		// 处理output
-		outputOpts := []output.Option{
+		outputOpts = append(outputOpts,
 			output.Map(lastFilter),
 			output.Map(stream.Select(0, stream.MayAudio)),
 			output.VideoCodec(sub.Filters.Video.Codec),
@@ -116,7 +121,7 @@ func (tc *Transcode) SimpleMP4(ctx context.Context, params *TranscodeParams) err
 			output.Thread(sub.Threads),
 			output.MaxMuxingQueueSize(4086),
 			output.File(sub.Outfile),
-		}
+		)
 		outputOpts = append(outputOpts, metadataOptionFromKV(sub.Filters.Metadata)...)
 
 		// 处理在每一路输出流的裁剪
