@@ -11,20 +11,6 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg"
 )
 
-type Option func(*FFprobe)
-
-func Binary(bin string) Option {
-	return func(f *FFprobe) {
-		f.bin = bin
-	}
-}
-
-func Debug(debug bool) Option {
-	return func(f *FFprobe) {
-		f.debug = debug
-	}
-}
-
 type FFprobe struct {
 	dry bool // dry run
 

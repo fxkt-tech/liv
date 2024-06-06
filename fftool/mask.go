@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type CoreFunc func(x, y int, w, h int) (uint8, uint8, uint8, uint8)
+type CoreFunc func(x, y int, w, h int) (r uint8, g uint8, b uint8, a uint8)
 
 func GenMask(coref CoreFunc, width int, height int, outfile string) error {
 	canvas := image.NewNRGBA(image.Rect(0, 0, width, height))

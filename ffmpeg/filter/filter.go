@@ -10,9 +10,6 @@ import (
 type Filter interface {
 	stream.Streamer
 	String() string
-	// Get(int) stream.Streamer
-	// Copy(int) Filter
-	// Use(...stream.Streamer) Filter
 }
 
 // 单输出滤镜

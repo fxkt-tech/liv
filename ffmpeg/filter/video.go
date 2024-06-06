@@ -97,6 +97,17 @@ func Crop[T Expr](x, y, w, h T) *SingleFilter {
 	}
 }
 
+// 视频淡入淡出
+func Fade(t string, st, d float32, c string) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf(
+			"fade=t=%s:st=%.2f:d=%.2f:c=%s",
+			t, st, d, c,
+		),
+	}
+}
+
 // 视频帧显示时间戳
 func SetPTS(expr string) *SingleFilter {
 	return &SingleFilter{

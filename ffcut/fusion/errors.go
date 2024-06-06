@@ -1,4 +1,4 @@
-package shelf
+package fusion
 
 import "errors"
 

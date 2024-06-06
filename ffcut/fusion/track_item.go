@@ -1,4 +1,4 @@
-package shelf
+package fusion
 
 import "github.com/google/uuid"
 
@@ -25,19 +25,20 @@ const (
 	TrackItemTypeAudio TrackItemType = "audio"
 	// 视频
 	TrackItemTypeVideo TrackItemType = "video"
-	// TODO: 转场
+	// Deprecated: 转场
+	// 现在转场收到了video中，属于video的一个属性，该属性会影响自身及紧挨着的
 	TrackItemTypeTransition TrackItemType = "transition"
 )
 
 type TrackItemBase struct {
 	Id string `json:"id"` // 根据uuid生成，单个合成协议内唯一
-	Selection
+	TimeRange
 	Type    TrackItemType `json:"type"`
-	AssetId string        `json:"asset_id"` // cme素材id
+	AssetId string        `json:"asset_id"` // CME素材id，或本地文件路径
 }
 
 // 剪辑时间线
-type Selection struct {
+type TimeRange struct {
 	StartTime int32 `json:"start_time"`
 	Duration  int32 `json:"duration"`
 }
@@ -149,6 +150,7 @@ type TrackItem struct {
 	TextStyleId string        `json:"text_style_id,omitempty"`
 	Contents    *ItemContents `json:"contents,omitempty"`
 	Operations  []*Operation  `json:"operations,omitempty"`
+	Transition  *Transition   `json:"transition,omitempty"`
 }
 
 // 创建轨道
@@ -167,8 +169,8 @@ func (i *TrackItem) SetAssetId(assetId string) *TrackItem {
 }
 
 // 时间线上的起点和持续时间
-func (i *TrackItem) SetSelection(startTime, duration int32) *TrackItem {
-	i.Selection = Selection{StartTime: startTime, Duration: duration}
+func (i *TrackItem) SetTimeRange(startTime, duration int32) *TrackItem {
+	i.TimeRange = TimeRange{StartTime: startTime, Duration: duration}
 	return i
 }
 
@@ -206,5 +208,10 @@ func (i *TrackItem) SetContents(text string, style *TextStyle) *TrackItem {
 
 func (i *TrackItem) SetOperations(ops ...*Operation) *TrackItem {
 	i.Operations = append(i.Operations, ops...)
+	return i
+}
+
+func (i *TrackItem) SetTransition(ts *Transition) *TrackItem {
+	i.Transition = ts
 	return i
 }

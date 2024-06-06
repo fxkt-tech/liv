@@ -35,7 +35,18 @@ func ASetPTS(expr string) *SingleFilter {
 func AMix(inputs int32) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("amix=inputs=%d:duration=first", inputs),
+		content: fmt.Sprintf("amix=inputs=%d:duration=first:normalize=0", inputs),
+	}
+}
+
+// 音频淡入淡出
+func AFade(t string, st, d float32) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf(
+			"afade=t=%s:st=%.2f:d=%.2f",
+			t, st, d,
+		),
 	}
 }
 

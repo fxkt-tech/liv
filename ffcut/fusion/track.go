@@ -1,4 +1,4 @@
-package shelf
+package fusion
 
 import (
 	"context"
@@ -115,7 +115,7 @@ func (d *TrackData) MaxDuration() float32 {
 	var maxDuration float32
 	for _, track := range d.tracks {
 		for _, item := range track.Items {
-			if sectionTo := conv.MillToF32(item.Selection.StartTime + item.Selection.Duration); maxDuration < sectionTo {
+			if sectionTo := conv.MillToF32(item.TimeRange.StartTime + item.TimeRange.Duration); maxDuration < sectionTo {
 				maxDuration = sectionTo
 			}
 		}
@@ -147,6 +147,7 @@ func (d *TrackData) Exec(outfile string) error {
 	for i := len(d.tracks) - 1; i >= 0; i-- {
 		switch d.tracks[i].Type {
 		case TrackTypeVideo:
+			var transitionCache *Transition
 			for _, item := range d.tracks[i].Items {
 				var (
 					startTime = conv.MillToF32(item.StartTime)
@@ -156,6 +157,7 @@ func (d *TrackData) Exec(outfile string) error {
 					w, h      = item.Width, item.Height
 					x, y      = item.Position.X, item.Position.Y
 					speed     float32
+					needSpeed = item.Section.To-item.Section.From != item.Duration
 				)
 				switch item.Type {
 				case TrackItemTypeVideo:
@@ -171,14 +173,98 @@ func (d *TrackData) Exec(outfile string) error {
 				switch item.Type {
 				case TrackItemTypeVideo:
 					// 处理视频流
-					fScale := filter.Scale(w, h).Use(iAsset.V())
-					fSpeed := filter.SetPTS(fsugar.PTSSpeed(speed)).Use(fScale)
-					fSetPTS := filter.SetPTS(fsugar.PTSOffset(startTime)).Use(fSpeed)
-					fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(startTime, startTime+duration)).Use(stage, fSetPTS)
 
-					ff.AddFilter(fScale, fSpeed, fSetPTS, fOverlay)
+					lastVideoFilter := iAsset.V()
+
+					// 视频流：缩放视频
+					fScale := filter.Scale(w, h).Use(lastVideoFilter)
+					ff.AddFilter(fScale)
+					lastVideoFilter = fScale
+
+					// 视频流：是否需要倍速
+					if needSpeed {
+						fSpeed := filter.SetPTS(fsugar.PTSSpeed(speed)).Use(lastVideoFilter)
+						ff.AddFilter(fSpeed)
+						lastVideoFilter = fSpeed
+					}
+
+					// 视频流：如果这个视频的和上一个视频有转场，处理转场后半部分
+					if transitionCache != nil {
+						switch transitionCache.Name {
+						case "fade":
+							d := conv.MillToF32(transitionCache.Duration) / 2
+							fFade := filter.Fade("in", 0, d, transitionCache.Color).Use(lastVideoFilter)
+							ff.AddFilter(fFade)
+							lastVideoFilter = fFade
+						}
+					}
+
+					// 视频流：如果这个视频的和下一个视频有转场，处理转场前半部分
+					if item.Transition != nil {
+						switch item.Transition.Name {
+						case "fade":
+							d := conv.MillToF32(item.Transition.Duration) / 2
+							st := duration - d
+							fFade := filter.Fade("out", st, d, item.Transition.Color).Use(lastVideoFilter)
+							ff.AddFilter(fFade)
+							lastVideoFilter = fFade
+						}
+					}
+
+					// 视频流：设置本段视频在时间线上的位置
+					fSetPTS := filter.SetPTS(fsugar.PTSOffset(startTime)).Use(lastVideoFilter)
+					ff.AddFilter(fSetPTS)
+					lastVideoFilter = fSetPTS
+
+					// 视频流：合并视频流到主舞台
+					fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(startTime, startTime+duration)).Use(stage, lastVideoFilter)
+					ff.AddFilter(fOverlay)
 
 					stage = fOverlay // 每完成一步的结果就是当前舞台的模样
+
+					// 处理音频流
+
+					lastAudioFilter := iAsset.A()
+
+					// 音频流：是否需要倍速
+					if needSpeed {
+						fAtempo := filter.ATempo(speed).Use(lastAudioFilter)
+						ff.AddFilter(fAtempo)
+						lastAudioFilter = fAtempo
+					}
+
+					// 音频流：如果这个视频的和上一个视频有转场，处理转场后半部分
+					if transitionCache != nil && transitionCache.WithAudio {
+						switch transitionCache.Name {
+						case "fade":
+							d := conv.MillToF32(transitionCache.Duration) / 2
+							fAFade := filter.AFade("in", 0, d).Use(lastAudioFilter)
+							ff.AddFilter(fAFade)
+							lastAudioFilter = fAFade
+						}
+					}
+
+					// 音频流：如果这个视频的和下一个视频有转场，处理转场前半部分
+					if item.Transition != nil && item.Transition.WithAudio {
+						switch item.Transition.Name {
+						case "fade":
+							d := conv.MillToF32(item.Transition.Duration) / 2
+							st := duration - d
+							fAFade := filter.AFade("out", st, d).Use(lastAudioFilter)
+							ff.AddFilter(fAFade)
+							lastAudioFilter = fAFade
+						}
+					}
+
+					fADelay := filter.ADelay(startTime).Use(lastAudioFilter)
+					ff.AddFilter(fADelay)
+					lastAudioFilter = fADelay
+
+					fAMix := filter.AMix(2).Use(sound, lastAudioFilter)
+					ff.AddFilter(fAMix)
+
+					sound = fAMix // 每完成一步的结果就是当前音响的效果
+
 				case TrackItemTypeImage:
 					// 处理图片
 					fScale := filter.Scale(w, h).Use(iAsset.V())
@@ -187,17 +273,8 @@ func (d *TrackData) Exec(outfile string) error {
 					stage = fOverlay // 每完成一步的结果就是当前舞台的模样
 				}
 
-				switch item.Type {
-				case TrackItemTypeVideo:
-					// 处理音频流
-					fAtempo := filter.ATempo(speed).Use(iAsset.A())
-					fADelay := filter.ADelay(startTime).Use(fAtempo)
-					fAMix := filter.AMix(2).Use(sound, fADelay)
-
-					ff.AddFilter(fAtempo, fADelay, fAMix)
-
-					sound = fAMix // 每完成一步的结果就是当前音响的效果
-				}
+				// 如果当前与下一个视频间有转场则放入缓存，否则清空缓存
+				transitionCache = sugar.IfExpr(item.Transition != nil, item.Transition, nil)
 			}
 		case TrackTypeAudio:
 			for _, item := range d.tracks[i].Items {
@@ -207,21 +284,35 @@ func (d *TrackData) Exec(outfile string) error {
 					from      = conv.MillToF32(item.Section.From)
 					to        = conv.MillToF32(item.Section.To)
 					speed     = (to - from) / duration
+					needSpeed = item.Section.To-item.Section.From != item.Duration
 				)
 
 				// 截取当前素材段
 				iAsset := input.WithTime(startTime, duration, item.AssetId)
 
-				// 处理音频流
-				fADelay := filter.ADelay(startTime).Use(iAsset.A())
-				fAtempo := filter.ATempo(speed).Use(fADelay)
-				fAMix := filter.AMix(2).Use(sound, fADelay)
+				if needSpeed {
+					// 处理音频流
+					fADelay := filter.ADelay(startTime).Use(iAsset.A())
+					fAtempo := filter.ATempo(speed).Use(fADelay)
+					fAMix := filter.AMix(2).Use(sound, fADelay)
 
-				ff.AddInput(iAsset)
-				ff.AddFilter(fADelay, fAtempo, fAMix)
+					ff.AddInput(iAsset)
+					ff.AddFilter(fADelay, fAtempo, fAMix)
 
-				// 每完成一步的结果就是当前音响的效果
-				sound = fAMix
+					// 每完成一步的结果就是当前音响的效果
+					sound = fAMix
+				} else {
+					// 处理音频流
+					fADelay := filter.ADelay(startTime).Use(iAsset.A())
+					fAMix := filter.AMix(2).Use(sound, fADelay)
+
+					ff.AddInput(iAsset)
+					ff.AddFilter(fADelay, fAMix)
+
+					// 每完成一步的结果就是当前音响的效果
+					sound = fAMix
+				}
+
 			}
 		case TrackTypeTitle:
 		case TrackTypeSubtitle:
