@@ -59,6 +59,8 @@ type TrackData struct {
 
 	err error
 	ctx context.Context
+
+	ffmpegOpts []ffmpeg.Option
 }
 
 var New = NewTrackData
@@ -66,6 +68,11 @@ var New = NewTrackData
 func NewTrackData(opts ...ShelfOption) *TrackData {
 	d := &TrackData{ctx: context.Background()}
 	sugar.Range(opts, func(opt ShelfOption) { opt(d) })
+	return d
+}
+
+func (d *TrackData) FFmpegOptions(opts ...ffmpeg.Option) *TrackData {
+	d.ffmpegOpts = append(d.ffmpegOpts, opts...)
 	return d
 }
 
@@ -125,10 +132,7 @@ func (d *TrackData) MaxDuration() float32 {
 
 func (d *TrackData) Exec(outfile string) error {
 	var (
-		ff = ffmpeg.New(
-			// ffmpeg.WithDry(true),
-			ffmpeg.WithDebug(true),
-		)
+		ff = ffmpeg.New(d.ffmpegOpts...)
 
 		maxDuration = d.MaxDuration()
 
