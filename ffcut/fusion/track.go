@@ -324,6 +324,7 @@ func (d *TrackData) Exec(outfile string) error {
 		output.Map(sound),
 		output.VideoCodec(codec.X264),
 		output.AudioCodec(codec.AAC),
+		output.MovFlags("faststart"),
 		// output.AudioCodec(codec.Nope),
 		output.File(outfile),
 	))
