@@ -71,11 +71,6 @@ func NewTrackData(opts ...ShelfOption) *TrackData {
 	return d
 }
 
-func (d *TrackData) FFmpegOptions(opts ...ffmpeg.Option) *TrackData {
-	d.ffmpegOpts = append(d.ffmpegOpts, opts...)
-	return d
-}
-
 // 获取指定轨道，返回nil则表示不存在
 func (d *TrackData) GetTrack(trackType TrackType, idx int) *Track {
 	i := 0
