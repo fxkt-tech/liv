@@ -87,12 +87,22 @@ func Color(c string, w, h int32, d float32) *SingleFilter {
 }
 
 // 裁切
-func Crop[T Expr](x, y, w, h T) *SingleFilter {
+func Crop[T Expr](w, h, x, y T) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf(
 			"crop=%v:%v:%v:%v",
-			x, y, w, h,
+			w, h, x, y,
+		),
+	}
+}
+
+// 高斯模糊
+func GBlur(sigma int32) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf(
+			"gblur=sigma=%d", sigma,
 		),
 	}
 }
@@ -104,6 +114,17 @@ func Fade(t string, st, d float32, c string) *SingleFilter {
 		content: fmt.Sprintf(
 			"fade=t=%s:st=%.2f:d=%.2f:c=%s",
 			t, st, d, c,
+		),
+	}
+}
+
+// 字幕
+func Subtitles(filename, fontsdir, forceStyle string) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf(
+			"subtitles=f=%s:fontsdir=%s:force_style='%s'",
+			filename, fontsdir, forceStyle,
 		),
 	}
 }
