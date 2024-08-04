@@ -5,9 +5,10 @@ const (
 	Nope = "nope"
 
 	// audio
-	AAC     = "aac"
-	FDKAAC  = "libfdk_aac"
-	MP3Lame = "libmp3lame"
+	AAC      = "aac"
+	FDKAAC   = "libfdk_aac"
+	MP3Lame  = "libmp3lame"
+	PCMS16LE = "pcm_s16le"
 
 	// video
 	X264  = "libx264"
