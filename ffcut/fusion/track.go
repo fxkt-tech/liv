@@ -291,12 +291,12 @@ func (d *TrackData) Exec(outfile string) error {
 
 				if needSpeed {
 					// 处理音频流
-					fADelay := filter.ADelay(startTime).Use(iAsset.A())
-					fAtempo := filter.ATempo(speed).Use(fADelay)
-					fAMix := filter.AMix(2).Use(sound, fAtempo)
+					fAtempo := filter.ATempo(speed).Use(iAsset.A())
+					fADelay := filter.ADelay(startTime).Use(fAtempo)
+					fAMix := filter.AMix(2).Use(sound, fADelay)
 
 					ff.AddInput(iAsset)
-					ff.AddFilter(fADelay, fAtempo, fAMix)
+					ff.AddFilter(fAtempo, fADelay, fAMix)
 
 					// 每完成一步的结果就是当前音响的效果
 					sound = fAMix
