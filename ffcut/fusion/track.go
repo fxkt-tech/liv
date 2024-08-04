@@ -287,13 +287,13 @@ func (d *TrackData) Exec(outfile string) error {
 				)
 
 				// 截取当前素材段
-				iAsset := input.WithTime(startTime, duration, item.AssetId)
+				iAsset := input.WithTime(from, to, item.AssetId)
 
 				if needSpeed {
 					// 处理音频流
 					fADelay := filter.ADelay(startTime).Use(iAsset.A())
 					fAtempo := filter.ATempo(speed).Use(fADelay)
-					fAMix := filter.AMix(2).Use(sound, fADelay)
+					fAMix := filter.AMix(2).Use(sound, fAtempo)
 
 					ff.AddInput(iAsset)
 					ff.AddFilter(fADelay, fAtempo, fAMix)
