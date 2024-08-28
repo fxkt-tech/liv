@@ -50,10 +50,20 @@ func AFade(t string, st, d float32) *SingleFilter {
 	}
 }
 
-func Loudnorm(i, tp int32) *SingleFilter {
+func Loudnorm(i, lra, tp float32) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("loudnorm=I=%d:TP=%d", i, tp),
+		content: fmt.Sprintf("loudnorm=i=%f:lra=%f:tp=%f:print_format=json", i, lra, tp),
+	}
+}
+
+func LoudnormDoublePass(i, lra, tp float32, mi, mlra, mtp, mthres float32) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf(
+			"loudnorm=i=%f:lra=%f:tp=%f:measured_i=%f:measured_lra=%f:measured_tp=%f:measured_thresh=%f:print_format=json",
+			i, lra, tp, mi, mlra, mtp, mthres,
+		),
 	}
 }
 

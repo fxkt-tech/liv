@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
+	"github.com/fxkt-tech/liv/internal/encoding/json"
 	"github.com/fxkt-tech/liv/internal/sugar"
 )
 
@@ -89,4 +91,36 @@ func (ff *FFmpeg) Run(ctx context.Context) (err error) {
 		err = errors.New(string(retbytes))
 	}
 	return
+}
+
+type LoudnormParms struct {
+	InputI            float32 `json:"input_i,string"`
+	InputTP           float32 `json:"input_tp,string"`
+	InputLRA          float32 `json:"input_lra,string"`
+	InputThresh       float32 `json:"input_thresh,string"`
+	OutputI           float32 `json:"output_i,string"`
+	OutputTP          float32 `json:"output_tp,string"`
+	OutputLRA         float32 `json:"output_lra,string"`
+	OutputThresh      float32 `json:"output_thresh,string"`
+	NormalizationType string  `json:"normalization_type,string"`
+	TargetOffset      float32 `json:"target_offset,string"`
+}
+
+func (ff *FFmpeg) ExtractLoudnorm(ctx context.Context) (*LoudnormParms, error) {
+	if ff.debug {
+		ff.DryRun()
+	}
+	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
+	retbytes, err := cc.CombinedOutput()
+	retstr := string(retbytes)
+	if err != nil {
+		return nil, errors.New(retstr)
+	}
+
+	reg := regexp.MustCompile("(?s)({.*})")
+	matches := reg.FindStringSubmatch(retstr)
+	if len(matches) < 2 {
+		return nil, errors.New(retstr)
+	}
+	return json.ToV[*LoudnormParms]([]byte(matches[1])), nil
 }
