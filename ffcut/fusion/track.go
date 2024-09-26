@@ -50,6 +50,18 @@ var (
 	TrackVideoAllowdItems    = []TrackItemType{TrackItemTypeVideo, TrackItemTypeImage, TrackItemTypeTransition}
 )
 
+type ExportType string
+
+var (
+	ExportVideo ExportType = "video"
+	ExportAudio ExportType = "audio"
+)
+
+type ExportConfig struct {
+	Type    ExportType
+	Outfile string
+}
+
 // 合成协议
 type TrackData struct {
 	stageWidth  int32
@@ -125,7 +137,11 @@ func (d *TrackData) MaxDuration() float32 {
 	return maxDuration
 }
 
-func (d *TrackData) Exec(outfile string) error {
+func (d *TrackData) Export(exportConfig ExportConfig) error {
+	if d.err != nil {
+		return d.err
+	}
+
 	var (
 		ff = ffmpeg.New(d.ffmpegOpts...)
 
@@ -318,15 +334,27 @@ func (d *TrackData) Exec(outfile string) error {
 		}
 	}
 
-	ff.AddOutput(output.New(
-		output.Map(stage),
-		output.Map(sound),
-		output.VideoCodec(codec.X264),
-		output.AudioCodec(codec.AAC),
-		output.MovFlags("faststart"),
-		// output.AudioCodec(codec.Nope),
-		output.File(outfile),
-	))
+	switch exportConfig.Type {
+	case ExportVideo:
+		ff.AddOutput(output.New(
+			output.Map(stage),
+			output.Map(sound),
+			output.VideoCodec(codec.X264),
+			output.AudioCodec(codec.AAC),
+			output.MovFlags("faststart"),
+			output.File(exportConfig.Outfile),
+		))
+	case ExportAudio:
+		ff.AddOutput(output.New(
+			output.Map(sound),
+			output.AudioCodec(codec.PCMS16LE),
+			output.File(exportConfig.Outfile),
+		), output.New(
+			output.Map(stage),
+			output.Format("null"),
+			output.File("-"),
+		))
+	}
 	err := ff.Run(d.ctx)
 	if err != nil {
 		return err
@@ -336,7 +364,7 @@ func (d *TrackData) Exec(outfile string) error {
 }
 
 // 导出合成协议
-func (d *TrackData) Export() (string, error) {
+func (d *TrackData) ExportProto() (string, error) {
 	if d.err != nil {
 		return "", d.err
 	}

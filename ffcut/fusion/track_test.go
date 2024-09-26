@@ -64,7 +64,7 @@ func TestExport(t *testing.T) {
 				).
 				SetStyles(fusion.DefaultSubtitleStyle()),
 		).
-		Export() // 导出
+		ExportProto() // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,10 @@ func TestExec(t *testing.T) {
 						SetPosition(100, 50),
 				),
 		).
-		Exec("out_test.mp4") // 导出
+		Export(fusion.ExportConfig{
+			Type:    fusion.ExportVideo,
+			Outfile: "out_test.mp4",
+		}) // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +156,10 @@ func TestExec2(t *testing.T) {
 						SetPosition(0, 0),
 				),
 		).
-		Exec("out_test.mp4") // 导出
+		Export(fusion.ExportConfig{
+			Type:    fusion.ExportVideo,
+			Outfile: "out_test.mp4",
+		}) // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +222,10 @@ func TestSpeed(t *testing.T) {
 						SetPosition(0, 0),
 				),
 		).
-		Exec("out_test_1_1.mp4") // 导出
+		Export(fusion.ExportConfig{
+			Type:    fusion.ExportVideo,
+			Outfile: "out_test_1_1.mp4",
+		}) // 导出
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -252,7 +261,10 @@ func TestVmix(t *testing.T) {
 						SetPosition(0, 0),
 				),
 		).
-		Exec("out_test.mp4") // 导出
+		Export(fusion.ExportConfig{
+			Type:    fusion.ExportVideo,
+			Outfile: "out_test.mp4",
+		}) // 导出
 	if err != nil {
 		t.Fatal(err)
 	}

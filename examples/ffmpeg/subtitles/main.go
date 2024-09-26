@@ -37,7 +37,7 @@ func main() {
 
 		// filters
 		fDelogo    = filter.Crop(sw, sh, sx, sy).Use(iMain.V())
-		fGBlur     = filter.GBlur(25).Use(fDelogo)
+		fGBlur     = filter.GBlur(50).Use(fDelogo)
 		fOverlay   = filter.Overlay(sx, sy).Use(iMain.V(), fGBlur)
 		fSubtitles = filter.Subtitles("subtitle.srt", "",
 			fsugar.NewAssSubtitle().
@@ -56,7 +56,7 @@ func main() {
 			output.Map(iMain.MayA()),
 			output.VideoCodec(codec.X264),
 			output.AudioCodec(codec.Copy),
-			output.File("out2.mp4"),
+			output.File("out4.mp4"),
 		)
 	)
 
