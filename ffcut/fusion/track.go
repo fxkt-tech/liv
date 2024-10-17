@@ -9,9 +9,9 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/filter/fsugar"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
-	"github.com/fxkt-tech/liv/internal/conv"
-	"github.com/fxkt-tech/liv/internal/encoding/json"
-	"github.com/fxkt-tech/liv/internal/sugar"
+	"github.com/fxkt-tech/liv/pkg/conv"
+	"github.com/fxkt-tech/liv/pkg/encoding/json"
+	"github.com/fxkt-tech/liv/pkg/sugar"
 	"github.com/google/uuid"
 )
 

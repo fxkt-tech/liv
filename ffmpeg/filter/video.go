@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fxkt-tech/liv/internal/math"
-	"github.com/fxkt-tech/liv/internal/naming"
+	"github.com/fxkt-tech/liv/fftool/naming"
+	"github.com/fxkt-tech/liv/pkg/math"
 	"golang.org/x/exp/constraints"
 )
 

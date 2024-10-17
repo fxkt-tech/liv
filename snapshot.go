@@ -16,7 +16,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffprobe"
-	"github.com/fxkt-tech/liv/internal/math"
+	"github.com/fxkt-tech/liv/pkg/math"
 )
 
 type Snapshot struct {

@@ -1,6 +1,6 @@
 package ffcut
 
-import "github.com/fxkt-tech/liv/internal/sugar"
+import "github.com/fxkt-tech/liv/pkg/sugar"
 
 type FFcut struct {
 	//

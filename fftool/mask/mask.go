@@ -1,4 +1,4 @@
-package fftool
+package mask
 
 import (
 	"image"
@@ -7,9 +7,11 @@ import (
 	"os"
 )
 
+// 核函数
 type CoreFunc func(x, y int, w, h int) (r uint8, g uint8, b uint8, a uint8)
 
-func GenMask(coref CoreFunc, width int, height int, outfile string) error {
+// 生成蒙版
+func Gen(coref CoreFunc, width int, height int, outfile string) error {
 	canvas := image.NewNRGBA(image.Rect(0, 0, width, height))
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {

@@ -14,7 +14,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/output"
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffmpeg/util"
-	"github.com/fxkt-tech/liv/internal/sugar"
+	"github.com/fxkt-tech/liv/pkg/sugar"
 )
 
 type Transcode struct {

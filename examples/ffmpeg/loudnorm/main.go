@@ -9,7 +9,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/filter"
 	"github.com/fxkt-tech/liv/ffmpeg/input"
 	"github.com/fxkt-tech/liv/ffmpeg/output"
-	"github.com/fxkt-tech/liv/internal/encoding/json"
+	"github.com/fxkt-tech/liv/pkg/encoding/json"
 )
 
 // ffmpeg -i voice.wav -filter_complex "loudnorm=I=-16:TP=-1:LRA=11:print_format=json" -f null -
@@ -18,7 +18,7 @@ func main() {
 		ctx = context.Background()
 
 		// inputs
-		iMain = input.WithSimple("voice.wav")
+		iMain = input.WithSimple("/Users/Justyer/Desktop/voice.wav")
 
 		// filters
 		fLoudnorm = filter.Loudnorm(-12, 7, -1.5).Use(iMain.A())
@@ -55,7 +55,7 @@ func main() {
 		oOnly = output.New(
 			output.Map(fLoudnorm2),
 			output.AudioCodec(codec.PCMS16LE),
-			output.File("voice_ln.wav"),
+			output.File("/Users/Justyer/Desktop/voice_ln.wav"),
 		)
 	)
 

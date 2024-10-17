@@ -3,7 +3,7 @@ package filter
 import (
 	"fmt"
 
-	"github.com/fxkt-tech/liv/internal/naming"
+	"github.com/fxkt-tech/liv/fftool/naming"
 	"golang.org/x/exp/constraints"
 )
 
