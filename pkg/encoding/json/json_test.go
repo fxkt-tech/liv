@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fxkt-tech/liv/internal/encoding/json"
+	"github.com/fxkt-tech/liv/pkg/encoding/json"
 )
 
 func TestPretty(t *testing.T) {
