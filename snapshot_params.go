@@ -1,14 +1,15 @@
 package liv
 
 type SnapshotParams struct {
-	Infile    string
-	Outfile   string
-	StartTime float32
-	Interval  int32
-	Num       int32
-	FrameType int32 // 0-仅关键帧 1-指定时间点的帧
-	Width     int32
-	Height    int32
+	Infile         string
+	Outfile        string
+	StartTime      float32
+	Interval       int32 // 间隔时间
+	IntervalFrames int32 // 间隔帧数
+	Num            int32
+	FrameType      int32 // 0-仅关键帧 1-指定时间点的帧
+	Width          int32
+	Height         int32
 }
 
 type SpriteParams struct {

@@ -61,9 +61,16 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 		outputOptions = append(outputOptions, output.VSync("vfr"))
 	case 1:
 		if params.Num != 1 {
-			fpsFilter := filter.FPS(math.Fraction(1, params.Interval))
-			filters = append(filters, fpsFilter)
-			lastFilter = fpsFilter
+			if params.IntervalFrames > 0 {
+				selectFilter := filter.Select(fmt.Sprintf("'not(mod(n,%d))'", params.IntervalFrames))
+				filters = append(filters, selectFilter)
+				lastFilter = selectFilter
+				outputOptions = append(outputOptions, output.VSync("vfr"))
+			} else {
+				fpsFilter := filter.FPS(math.Fraction(1, params.Interval))
+				filters = append(filters, fpsFilter)
+				lastFilter = fpsFilter
+			}
 		}
 	}
 	if params.Width > 0 || params.Height > 0 {
