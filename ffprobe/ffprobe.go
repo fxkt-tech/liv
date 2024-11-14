@@ -17,6 +17,7 @@ type FFprobe struct {
 	debug bool
 
 	bin          string
+	user_agent   string
 	v            ffmpeg.LogLevel // loglevel
 	print_format string
 	show_format  bool
@@ -42,6 +43,9 @@ func New(opts ...Option) *FFprobe {
 }
 
 func (ff *FFprobe) Params() (params []string) {
+	if ff.user_agent != "" {
+		params = append(params, "-user_agent", ff.user_agent)
+	}
 	params = append(params, "-v", ff.v.String())
 	params = append(params, "-print_format", ff.print_format)
 	if ff.show_format {

@@ -13,3 +13,9 @@ func WithDebug(debug bool) Option {
 		fp.debug = debug
 	}
 }
+
+func WithUserAgent(ua string) Option {
+	return func(fp *FFprobe) {
+		fp.user_agent = ua
+	}
+}
