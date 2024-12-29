@@ -157,22 +157,22 @@ func Trim(s, e float32) *SingleFilter {
 	}
 }
 
-// Deprecated: 擦除logo
-func Delogo_Old(x, y, w, h int32) *SingleFilter {
-	return &SingleFilter{
-		name: naming.Default.Gen(),
-		content: fmt.Sprintf("delogo=%d:%d:%d:%d",
-			x+1, y+1, w-2, h-2,
-		),
-	}
-}
-
 // 遮标
 func Delogo[T Numb](x, y, w, h T) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
 		content: fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v",
 			x+1, y+1, w-2, h-2,
+		),
+	}
+}
+
+// 绘制矩形区域
+func DrawBox[T Expr](x, y, w, h T, color string) *SingleFilter {
+	return &SingleFilter{
+		name: naming.Default.Gen(),
+		content: fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v:t=1:c=%s",
+			x, y, w, h, color,
 		),
 	}
 }
