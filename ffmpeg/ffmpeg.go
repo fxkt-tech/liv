@@ -54,6 +54,11 @@ func (fm *FFmpeg) AddOutput(outputs ...*output.Output) *FFmpeg {
 	return fm
 }
 
+func (fm *FFmpeg) ClearOutput() *FFmpeg {
+	fm.outputs = nil
+	return fm
+}
+
 func (fm *FFmpeg) Params() []string {
 	var params []string
 	if fm.v != "" {
