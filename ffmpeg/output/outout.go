@@ -28,6 +28,10 @@ type Output struct {
 	var_stream_map        string
 	vsync                 string
 	g                     int32 // gop
+	pass                  int32
+	passlogfile           string
+	maxrate               int32
+	bufsize               int32
 
 	nonSupportArgs map[string]string
 
@@ -46,12 +50,6 @@ type Output struct {
 
 func New(opts ...Option) *Output {
 	op := &Output{
-		// threads:               4,
-		// max_muxing_queue_size: 4086,
-		// movflags: "faststart",
-		// cv:                    codec.X264,
-		// ca:                    codec.Copy,
-		// hls_time:              2,
 		nonSupportArgs: make(map[string]string),
 	}
 	for _, o := range opts {
@@ -82,6 +80,18 @@ func (o *Output) Params() (params []string) {
 	}
 	if o.shortest {
 		params = append(params, "-shortest")
+	}
+	if o.maxrate != 0 {
+		params = append(params, "-maxrate", strconv.FormatInt(int64(o.maxrate), 10))
+	}
+	if o.bufsize != 0 {
+		params = append(params, "-bufsize", strconv.FormatInt(int64(o.bufsize), 10))
+	}
+	if o.pass > 0 {
+		params = append(params, "-pass", strconv.FormatInt(int64(o.pass), 10))
+	}
+	if o.passlogfile != "" {
+		params = append(params, "-passlogfile", o.passlogfile)
 	}
 	if o.bv != 0 {
 		params = append(params, "-b:v", strconv.FormatInt(int64(o.bv), 10))

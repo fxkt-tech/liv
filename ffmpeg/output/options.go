@@ -76,6 +76,30 @@ func AudioBitrate(ba int32) Option {
 	}
 }
 
+func Maxrate(maxrate int32) Option {
+	return func(o *Output) {
+		o.maxrate = maxrate
+	}
+}
+
+func Bufsize(bufsize int32) Option {
+	return func(o *Output) {
+		o.bufsize = bufsize
+	}
+}
+
+func Pass(pass int32) Option {
+	return func(o *Output) {
+		o.pass = pass
+	}
+}
+
+func PassLogfile(passlogfile string) Option {
+	return func(o *Output) {
+		o.passlogfile = passlogfile
+	}
+}
+
 func Metadata(k, v string) Option {
 	return func(o *Output) {
 		o.metadatas = append(o.metadatas, fmt.Sprintf("%s=%s", k, v))
