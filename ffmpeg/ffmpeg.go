@@ -82,14 +82,13 @@ func (ff *FFmpeg) DryRun() {
 }
 
 func (ff *FFmpeg) Run(ctx context.Context) (err error) {
-	if ff.debug {
+	if ff.dry {
 		ff.DryRun()
-	} else {
-		if ff.dry {
-			ff.DryRun()
-			return nil
-		}
+		return nil
+	} else if ff.debug {
+		ff.DryRun()
 	}
+
 	cc := exec.CommandContext(ctx, ff.bin, ff.Params()...)
 	retbytes, err := cc.CombinedOutput()
 	if err != nil {

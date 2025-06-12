@@ -17,6 +17,7 @@ import (
 	"github.com/fxkt-tech/liv/ffmpeg/stream"
 	"github.com/fxkt-tech/liv/ffprobe"
 	"github.com/fxkt-tech/liv/pkg/math"
+	"github.com/fxkt-tech/liv/pkg/sugar"
 )
 
 type Snapshot struct {
@@ -54,12 +55,12 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 	lastFilter := stream.V(0)
 	// 使用普通帧截图时，必须要传截图间隔，除非只截一张
 	switch params.FrameType {
-	case 0: // 关键帧
+	case 0: // 仅关键帧截图
 		selectFilter := filter.Select("'eq(pict_type,I)'")
 		filters = append(filters, selectFilter)
 		lastFilter = selectFilter
 		outputOptions = append(outputOptions, output.VSync("vfr"))
-	case 1:
+	case 1: // 等间隔截图
 		if params.Num != 1 {
 			if params.IntervalFrames > 0 {
 				selectFilter := filter.Select(fmt.Sprintf("'not(mod(n,%d))'", params.IntervalFrames))
@@ -71,6 +72,17 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 				filters = append(filters, fpsFilter)
 				lastFilter = fpsFilter
 			}
+		}
+	case 2: // 指定帧序列截图
+		if len(params.Frames) > 0 {
+			selectExpr := fmt.Sprintf("'%s'",
+				strings.Join(sugar.Map(params.Frames, func(frame int32) string {
+					return fmt.Sprintf("eq(n,%d)", frame)
+				}), "+"))
+			selectFilter := filter.Select(selectExpr)
+			filters = append(filters, selectFilter)
+			lastFilter = selectFilter
+			outputOptions = append(outputOptions, output.VSync("vfr"))
 		}
 	}
 	if params.Width > 0 || params.Height > 0 {
