@@ -12,7 +12,7 @@ import (
 )
 
 // ffmpeg -y -i in.mp4 -c:v libx264 -b:v 10M -pass 1 -passlogfile pass_result -f null /dev/null
-// ffmpeg -y -i in.mp4 -c:v libx264 -b:v 10M -maxrate 10M -bufsize 10M -pass 2 out2.mp4
+// ffmpeg -y -i in.mp4 -c:v libx264 -b:v 10M -maxrate 10M -bufsize 10M -pass 2 -passlogfile pass_result out2.mp4
 func main() {
 	var (
 		ctx = context.Background()

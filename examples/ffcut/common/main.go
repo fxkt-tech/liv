@@ -20,6 +20,8 @@ func main() {
 					fusion.NewTrackItem(fusion.TrackItemTypeAudio).
 						SetAssetId("/Users/justyer/Desktop/qwer.wav").
 						SetTimeRange(0, 5000).
+						SetPosition(100, 200).
+						SetItemSize(1280, 720).
 						SetSection(0, 5000),
 				),
 		).

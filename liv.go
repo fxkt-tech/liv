@@ -8,4 +8,4 @@ type Transcoder interface {
 	Transcode(context.Context, *TranscodeParams) error
 }
 
-type VideoFilter interface{}
+type VideoFilter any
