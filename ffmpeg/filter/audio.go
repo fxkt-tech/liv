@@ -80,3 +80,13 @@ func ANullSrc(duration float32) *SingleFilter {
 		content: fmt.Sprintf("anullsrc=r=44100:d=%fs", duration),
 	}
 }
+
+// 音频循环
+// loop: 循环次数，-1表示无限循环，0表示不循环
+// size: 每次循环的最大采样数，默认0表示整个输入
+func ALoop(loop int, size int64) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("aloop=loop=%d:size=%d", loop, size),
+	}
+}

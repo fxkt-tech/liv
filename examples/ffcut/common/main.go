@@ -8,27 +8,40 @@ import (
 )
 
 func main() {
-	err := fusion.New(
+	proto, err := fusion.New(
 		fusion.WithStageSize(960, 540),
 		fusion.WithFFmpegOptions(
 			ffmpeg.WithDebug(true),
 		),
 	).
 		AppendTrack(
-			fusion.NewTrack(fusion.TrackTypeAudio).
+			fusion.NewTrack(fusion.TrackTypeVideo).
 				Append(
-					fusion.NewTrackItem(fusion.TrackItemTypeAudio).
-						SetAssetId("/Users/justyer/Desktop/qwer.wav").
+					fusion.NewTrackItem(fusion.TrackItemTypeVideo).
+						SetAssetId("qwer.mp4").
 						SetTimeRange(0, 5000).
 						SetPosition(100, 200).
 						SetItemSize(1280, 720).
 						SetSection(0, 5000),
 				),
 		).
-		Export(fusion.ExportConfig{
-			Type:    fusion.ExportAudio,
-			Outfile: "outout.wav",
-		}) // 导出
+		AppendTrack(
+			fusion.NewTrack(fusion.TrackTypeAudio).
+				Append(
+					fusion.NewTrackItem(fusion.TrackItemTypeAudio).
+						SetAssetId("qwer.wav").
+						SetTimeRange(0, 5000).
+						SetPosition(100, 200).
+						SetItemSize(1280, 720).
+						SetSection(0, 5000),
+				),
+		).
+		ExportProto()
+	// Export(fusion.ExportConfig{
+	// 	Type:    fusion.ExportAudio,
+	// 	Outfile: "outout.wav",
+	// }) // 导出
+	fmt.Println(proto)
 	if err != nil {
 		fmt.Println(err)
 	}
