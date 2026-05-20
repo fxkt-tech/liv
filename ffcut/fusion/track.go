@@ -232,7 +232,7 @@ func (d *TrackData) Export(exportConfig ExportConfig) error {
 					lastVideoFilter = fSetPTS
 
 					// 视频流：合并视频流到主舞台
-					fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(startTime, startTime+duration)).Use(stage, lastVideoFilter)
+					fOverlay := filter.Overlay(x, y, filter.WithEnable(fsugar.TimeBetween(startTime, startTime+duration))).Use(stage, lastVideoFilter)
 					ff.AddFilter(fOverlay)
 
 					stage = fOverlay // 每完成一步的结果就是当前舞台的模样
@@ -283,7 +283,7 @@ func (d *TrackData) Export(exportConfig ExportConfig) error {
 				case TrackItemTypeImage:
 					// 处理图片
 					fScale := filter.Scale(w, h).Use(iAsset.V())
-					fOverlay := filter.OverlayWithEnable(x, y, fsugar.TimeBetween(startTime, startTime+duration)).Use(stage, fScale)
+					fOverlay := filter.Overlay(x, y, filter.WithEnable(fsugar.TimeBetween(startTime, startTime+duration))).Use(stage, fScale)
 					ff.AddFilter(fScale, fOverlay)
 					stage = fOverlay // 每完成一步的结果就是当前舞台的模样
 				}
