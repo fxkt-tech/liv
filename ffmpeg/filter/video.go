@@ -177,6 +177,26 @@ func DrawBox[T Expr](x, y, w, h T, color string) *SingleFilter {
 	}
 }
 
+// 绘制填充矩形区域
+func DrawBoxFill[T Expr](x, y, w, h T, color string) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("drawbox=%v:%v:%v:%v:%s:t=fill", x, y, w, h, color),
+	}
+}
+
+// 色相与饱和度调整
+func Hue(h float32, s ...float32) *SingleFilter {
+	content := fmt.Sprintf("hue=h=%g", h)
+	if len(s) > 0 {
+		content += fmt.Sprintf(":s=%g", s[0])
+	}
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: content,
+	}
+}
+
 func Select(expr string) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
