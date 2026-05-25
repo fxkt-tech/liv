@@ -56,14 +56,14 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 	// 使用普通帧截图时，必须要传截图间隔，除非只截一张
 	switch params.FrameType {
 	case 0: // 仅关键帧截图
-		selectFilter := filter.Select("'eq(pict_type,I)'")
+		selectFilter := filter.Select("'eq(pict_type,I)'").Use(lastFilter)
 		filters = append(filters, selectFilter)
 		lastFilter = selectFilter
 		outputOptions = append(outputOptions, output.VSync("vfr"))
 	case 1: // 等间隔截图
 		if params.Num != 1 {
 			if params.IntervalFrames > 0 {
-				selectFilter := filter.Select(fmt.Sprintf("'not(mod(n,%d))'", params.IntervalFrames))
+				selectFilter := filter.Select(fmt.Sprintf("'not(mod(n,%d))'", params.IntervalFrames)).Use(lastFilter)
 				filters = append(filters, selectFilter)
 				lastFilter = selectFilter
 				outputOptions = append(outputOptions, output.VSync("vfr"))
@@ -79,7 +79,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 				strings.Join(sugar.Map(params.Frames, func(frame int32) string {
 					return fmt.Sprintf("eq(n,%d)", frame)
 				}), "+"))
-			selectFilter := filter.Select(selectExpr)
+			selectFilter := filter.Select(selectExpr).Use(lastFilter)
 			filters = append(filters, selectFilter)
 			lastFilter = selectFilter
 			outputOptions = append(outputOptions, output.VSync("vfr"))
