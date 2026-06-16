@@ -18,30 +18,15 @@ type Numb interface {
 }
 
 // 一个图像覆盖另一个图像
-func Overlay[T Expr](dx, dy T) *SingleFilter {
+func Overlay[T Expr](dx, dy T, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("overlay=%v:%v", dx, dy),
-	}
-}
-
-// 一个图像覆盖另一个图像（可激活某一时间段）
-func OverlayWithEnable[T Expr](dx, dy T, enable string) *SingleFilter {
-	return &SingleFilter{
-		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("overlay=%v:%v:enable='%s'", dx, dy, enable),
-	}
-}
-
-func OverlayWithTime[T Expr](dx, dy T, t float32) *SingleFilter {
-	return &SingleFilter{
-		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("overlay=%v:%v:t=%f", dx, dy, t),
+		content: joinFilter(fmt.Sprintf("overlay=%v:%v", dx, dy), opts...),
 	}
 }
 
 // 缩放
-func Scale[T Expr](w, h T) *SingleFilter {
+func Scale[T Expr](w, h T, opts ...FilterOpt) *SingleFilter {
 	var ww, hh any = w, h
 	switch ww.(type) {
 	case int32:
@@ -53,7 +38,7 @@ func Scale[T Expr](w, h T) *SingleFilter {
 	}
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("scale=%v:%v", ww, hh),
+		content: joinFilter(fmt.Sprintf("scale=%v:%v", ww, hh), opts...),
 	}
 }
 
@@ -65,80 +50,80 @@ func Scale[T Expr](w, h T) *SingleFilter {
 // }
 
 // 绿幕抠像
-func Chromakey(color string, similarity, blend float32) *SingleFilter {
+func Chromakey(color string, similarity, blend float32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf(
+		content: joinFilter(fmt.Sprintf(
 			"chromakey=%s:%.2f:%.2f",
 			color, similarity, blend,
-		),
+		), opts...),
 	}
 }
 
 // 创建一个底版
-func Color(c string, w, h int32, d float32) *SingleFilter {
+func Color(c string, w, h int32, d float32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf(
+		content: joinFilter(fmt.Sprintf(
 			"color=c=%s:s=%d*%d:d=%.2f:r=30",
 			c, w, h, d,
-		),
+		), opts...),
 	}
 }
 
 // 裁切
-func Crop[T Expr](w, h, x, y T) *SingleFilter {
+func Crop[T Expr](w, h, x, y T, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf(
+		content: joinFilter(fmt.Sprintf(
 			"crop=%v:%v:%v:%v",
 			w, h, x, y,
-		),
+		), opts...),
 	}
 }
 
 // 高斯模糊
-func GBlur(sigma int32) *SingleFilter {
+func GBlur(sigma int32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf(
+		content: joinFilter(fmt.Sprintf(
 			"gblur=sigma=%d", sigma,
-		),
+		), opts...),
 	}
 }
 
 // 视频淡入淡出
-func Fade(t string, st, d float32, c string) *SingleFilter {
+func Fade(t string, st, d float32, c string, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf(
+		content: joinFilter(fmt.Sprintf(
 			"fade=t=%s:st=%.2f:d=%.2f:c=%s",
 			t, st, d, c,
-		),
+		), opts...),
 	}
 }
 
 // 字幕
-func Subtitles(filename, fontsdir, forceStyle string) *SingleFilter {
+func Subtitles(filename, fontsdir, forceStyle string, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf(
+		content: joinFilter(fmt.Sprintf(
 			"subtitles=f=%s:fontsdir=%s:force_style='%s'",
 			filename, fontsdir, forceStyle,
-		),
+		), opts...),
 	}
 }
 
 // 视频帧显示时间戳
-func SetPTS(expr string) *SingleFilter {
+func SetPTS(expr string, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("setpts=%s", expr),
+		content: joinFilter(fmt.Sprintf("setpts=%s", expr), opts...),
 	}
 }
 
 // 截取某一时间段
-func Trim(s, e float32) *SingleFilter {
+func Trim(s, e float32, opts ...FilterOpt) *SingleFilter {
 	var ps []string
 	if s != 0 {
 		ps = append(ps, fmt.Sprintf("start=%f", s))
@@ -153,58 +138,58 @@ func Trim(s, e float32) *SingleFilter {
 	}
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("trim%s%s", eqs, psstr),
+		content: joinFilter(fmt.Sprintf("trim%s%s", eqs, psstr), opts...),
 	}
 }
 
 // 遮标
-func Delogo[T Numb](x, y, w, h T) *SingleFilter {
+func Delogo[T Numb](x, y, w, h T, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v",
+		content: joinFilter(fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v",
 			x+1, y+1, w-2, h-2,
-		),
+		), opts...),
 	}
 }
 
 // 绘制矩形区域
-func DrawBox[T Expr](x, y, w, h T, color string) *SingleFilter {
+func DrawBox[T Expr](x, y, w, h T, color string, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name: naming.Default.Gen(),
-		content: fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v:t=1:c=%s",
+		content: joinFilter(fmt.Sprintf("delogo=x=%v:y=%v:w=%v:h=%v:t=1:c=%s",
 			x, y, w, h, color,
-		),
+		), opts...),
 	}
 }
 
 // 绘制填充矩形区域
-func DrawBoxFill[T Expr](x, y, w, h T, color string) *SingleFilter {
+func DrawBoxFill[T Expr](x, y, w, h T, color string, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("drawbox=%v:%v:%v:%v:%s:t=fill", x, y, w, h, color),
+		content: joinFilter(fmt.Sprintf("drawbox=%v:%v:%v:%v:%s:t=fill", x, y, w, h, color), opts...),
 	}
 }
 
 // 色相与饱和度调整
-func Hue(h float32, s ...float32) *SingleFilter {
+func Hue(h float32, s float32, opts ...FilterOpt) *SingleFilter {
 	content := fmt.Sprintf("hue=h=%g", h)
-	if len(s) > 0 {
-		content += fmt.Sprintf(":s=%g", s[0])
+	if s != 0 {
+		content += fmt.Sprintf(":s=%g", s)
 	}
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: content,
+		content: joinFilter(content, opts...),
 	}
 }
 
-func Select(expr string) *SingleFilter {
+func Select(expr string, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("select=%s", expr),
+		content: joinFilter(fmt.Sprintf("select=%s", expr), opts...),
 	}
 }
 
-func FPS[N, D constraints.Integer | constraints.Float](fps *math.Rational[N, D]) *SingleFilter {
+func FPS[N, D constraints.Integer | constraints.Float](fps *math.Rational[N, D], opts ...FilterOpt) *SingleFilter {
 	var s string
 	if fps.Den == 0 {
 		s = "source_fps"
@@ -213,24 +198,24 @@ func FPS[N, D constraints.Integer | constraints.Float](fps *math.Rational[N, D])
 	}
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("fps=fps=%s", s),
+		content: joinFilter(fmt.Sprintf("fps=fps=%s", s), opts...),
 	}
 }
 
-func Tile(xlen, ylen int32) *SingleFilter {
+func Tile(xlen, ylen int32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("tile=%d*%d", xlen, ylen),
+		content: joinFilter(fmt.Sprintf("tile=%d*%d", xlen, ylen), opts...),
 	}
 }
 
 // multi
 
 // 视频流复制成多份
-func Split(n int) *MultiFilter {
+func Split(n int, opts ...FilterOpt) *MultiFilter {
 	return &MultiFilter{
 		name:    naming.Default.Gen(),
-		content: fmt.Sprintf("split=%d", n),
+		content: joinFilter(fmt.Sprintf("split=%d", n), opts...),
 		counts:  n,
 	}
 }
