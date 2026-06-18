@@ -49,6 +49,14 @@ func Scale[T Expr](w, h T, opts ...FilterOpt) *SingleFilter {
 // 	}
 // }
 
+// 应用 3D LUT 调色文件
+func Lut3D(file string) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: fmt.Sprintf("lut3d=file=%s:interp=tetrahedral", file),
+	}
+}
+
 // 绿幕抠像
 func Chromakey(color string, similarity, blend float32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
