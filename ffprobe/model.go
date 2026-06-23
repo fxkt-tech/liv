@@ -25,6 +25,10 @@ type ProbeStream struct {
 	DAR        string `json:"display_aspect_radio,omitempty"`
 	NBFrames   int32  `json:"nb_frames,omitempty,string"`
 
+	ColorSpace     string `json:"color_space,omitempty"`
+	ColorTransfer  string `json:"color_transfer,omitempty"`
+	ColorPrimaries string `json:"color_primaries,omitempty"`
+
 	// audio
 	SampleFmt     string `json:"sample_fmt,omitempty"`         // 采样格式
 	SampleRate    int32  `json:"sample_rate,omitempty,string"` // 采样率
