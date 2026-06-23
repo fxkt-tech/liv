@@ -57,6 +57,30 @@ func Lut3D(file string) *SingleFilter {
 	}
 }
 
+// ZScale 构造 FFmpeg zscale 视频滤镜，args 直接使用 FFmpeg 原生参数。
+func ZScale(args string, opts ...FilterOpt) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: joinFilter(fmt.Sprintf("zscale=%s", args), opts...),
+	}
+}
+
+// Tonemap 构造 FFmpeg tonemap 视频滤镜，args 直接使用 FFmpeg 原生参数。
+func Tonemap(args string, opts ...FilterOpt) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: joinFilter(fmt.Sprintf("tonemap=%s", args), opts...),
+	}
+}
+
+// Format 构造 FFmpeg format 视频滤镜。
+func Format(pixFmt string, opts ...FilterOpt) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: joinFilter(fmt.Sprintf("format=%s", pixFmt), opts...),
+	}
+}
+
 // 绿幕抠像
 func Chromakey(color string, similarity, blend float32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
