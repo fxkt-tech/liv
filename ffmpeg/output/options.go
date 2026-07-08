@@ -64,6 +64,18 @@ func PixFmt(pixFmt string) Option {
 	}
 }
 
+func VideoProfile(profile string) Option {
+	return func(o *Output) {
+		o.videoProfile = profile
+	}
+}
+
+func AudioProfile(profile string) Option {
+	return func(o *Output) {
+		o.audioProfile = profile
+	}
+}
+
 func Crf(crf int32) Option {
 	return func(o *Output) {
 		o.crf = crf

@@ -16,6 +16,8 @@ type Output struct {
 	shortest              bool              // -shortest
 	bv, ba                int32             // bv is b:v, ba is b:a.
 	pix_fmt               string
+	videoProfile          string
+	audioProfile          string
 	crf                   int32
 	metadatas             []string // mean is -metadata.
 	threads               int32    // thread counts, default 4.
@@ -101,6 +103,12 @@ func (o *Output) Params() (params []string) {
 	}
 	if o.pix_fmt != "" {
 		params = append(params, "-pix_fmt", o.pix_fmt)
+	}
+	if o.videoProfile != "" {
+		params = append(params, "-profile:v", o.videoProfile)
+	}
+	if o.audioProfile != "" {
+		params = append(params, "-profile:a", o.audioProfile)
 	}
 	if o.crf != 0 {
 		params = append(params, "-crf", strconv.FormatInt(int64(o.crf), 10))

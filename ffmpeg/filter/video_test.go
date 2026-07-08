@@ -36,3 +36,11 @@ func TestFormat(t *testing.T) {
 		t.Fatalf("Format() = %q, want format filter", got)
 	}
 }
+
+func TestSetSAR(t *testing.T) {
+	got := SetSAR("1").String()
+
+	if !strings.Contains(got, "setsar=1") {
+		t.Fatalf("SetSAR() = %q, want setsar filter", got)
+	}
+}

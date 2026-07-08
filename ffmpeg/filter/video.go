@@ -81,6 +81,14 @@ func Format(pixFmt string, opts ...FilterOpt) *SingleFilter {
 	}
 }
 
+// SetSAR 构造 FFmpeg setsar 视频滤镜。
+func SetSAR[T Expr](sar T, opts ...FilterOpt) *SingleFilter {
+	return &SingleFilter{
+		name:    naming.Default.Gen(),
+		content: joinFilter(fmt.Sprintf("setsar=%v", sar), opts...),
+	}
+}
+
 // 绿幕抠像
 func Chromakey(color string, similarity, blend float32, opts ...FilterOpt) *SingleFilter {
 	return &SingleFilter{
