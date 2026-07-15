@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/fxkt-tech/liv/ffmpeg"
 )
 
 type FFprobe struct {
@@ -18,7 +16,7 @@ type FFprobe struct {
 
 	bin          string
 	user_agent   string
-	v            ffmpeg.LogLevel // loglevel
+	v            string // loglevel
 	print_format string
 	show_format  bool
 	show_streams bool
@@ -31,7 +29,7 @@ type FFprobe struct {
 func New(opts ...Option) *FFprobe {
 	f := &FFprobe{
 		bin:          "ffprobe",
-		v:            ffmpeg.LogLevelQuiet,
+		v:            "quiet",
 		print_format: "json",
 		show_format:  true,
 		show_streams: true,
@@ -46,7 +44,7 @@ func (ff *FFprobe) Params() (params []string) {
 	if ff.user_agent != "" {
 		params = append(params, "-user_agent", ff.user_agent)
 	}
-	params = append(params, "-v", ff.v.String())
+	params = append(params, "-v", ff.v)
 	params = append(params, "-print_format", ff.print_format)
 	if ff.show_format {
 		params = append(params, "-show_format")
@@ -84,7 +82,7 @@ func (ff *FFprobe) Run(ctx context.Context) error {
 	ff.Sentence = cc.String()
 	retbytes, err := cc.CombinedOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("ffprobe failed: %w: %s", err, strings.TrimSpace(string(retbytes)))
 	}
 	probe := &Probe{}
 	err = json.Unmarshal(retbytes, probe)
@@ -111,7 +109,7 @@ func (ff *FFprobe) RunRetRaw(ctx context.Context) ([]byte, error) {
 	ff.Sentence = cc.String()
 	retbytes, err := cc.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ffprobe failed: %w: %s", err, strings.TrimSpace(string(retbytes)))
 	}
 	probe := &Probe{}
 	err = json.Unmarshal(retbytes, probe)
@@ -130,7 +128,7 @@ func (ff *FFprobe) GetFirstVideoStream() *ProbeStream {
 		return nil
 	}
 	for _, stream := range ff.probe.Streams {
-		if stream.CodecType == "video" {
+		if stream != nil && stream.CodecType == "video" {
 			return stream
 		}
 	}
@@ -142,7 +140,7 @@ func (ff *FFprobe) GetFirstAudioStream() *ProbeStream {
 		return nil
 	}
 	for _, stream := range ff.probe.Streams {
-		if stream.CodecType == "audio" {
+		if stream != nil && stream.CodecType == "audio" {
 			return stream
 		}
 	}

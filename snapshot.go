@@ -131,7 +131,7 @@ func (ss *Snapshot) Sprite(ctx context.Context, params *SpriteParams) error {
 		frames = vstream.NBFrames
 	}
 	if vstream.Duration > 0 {
-		duration = vstream.Duration
+		duration = float32(vstream.Duration.Seconds())
 	}
 
 	var (
