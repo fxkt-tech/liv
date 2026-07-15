@@ -35,3 +35,16 @@ This parent task coordinates three independently verifiable child tasks. It has 
 - Cross-child tests pass.
 - Parent PRD has no unmet acceptance criteria.
 - Renderer remains explicitly out of scope.
+
+## Integration Review — 2026-07-15
+
+- [x] All three child tasks are archived with every child acceptance criterion checked.
+- [x] `go test -count=1 -race -cover ./ffcut ./ffprobe ./ffvmix ./ffvmix/constraints` passes.
+- [x] `go vet` and `staticcheck` pass for `ffcut`, `ffprobe`, `ffvmix`, and `ffvmix/constraints`.
+- [x] `ffcut` has no dependency on `ffprobe`, `ffmpeg`, or `ffcut/fusion`; `ffvmix` has no dependency on `ffmpeg` or `ffcut/fusion`.
+- [x] Compile-to-generator integration proves no generation-time probing and Project v2 semantic JSON round-trip.
+- [x] Generator integration covers natural, speed-up, slow-down, loop, freeze, trim, all background variants, transitions, original audio, BGM, and global layers.
+- [x] New tests contain no developer-home or desktop media paths; real media is generated in temporary directories.
+- [x] Full `go test -count=1 ./...` has no new failures. The only failures are the four pre-existing non-hermetic `ffcut/fusion` tests (`TestExec`, `TestExec2`, `TestSpeed`, `TestVmix`) that require `in.mp4` or files under `/Users/justyer/Desktop`.
+- [x] Project v2, template compiler, and lazy generator contracts are captured under `.trellis/spec/backend/`.
+- [x] FFmpeg rendering and migration of legacy `ffcut/fusion` remain explicitly out of scope.

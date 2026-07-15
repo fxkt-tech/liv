@@ -37,16 +37,16 @@ ffcut/
   marshal.go       validated JSON codec
 
 ffvmix/
-  template.go      persisted template aggregate
-  slot.go          duration and fit policies
-  source.go        local source references
-  transition.go    join candidate definitions
+  template.go      persisted aggregate, slots, sources, joins and BGM
+  adaptation.go    duration and fit policy planning
   layer.go         semantic layer anchors
   compile.go       validation/probing/normalization
+  compiled.go      immutable compiled views
   generator.go     stateful iterator
   enumerator.go    deterministic weighted traversal
-  constraint.go    plugin contract
-  constraints/     built-in constraints
+  constraint.go    root aliases for the plugin contract
+  constraints/     immutable views and built-in constraints
+  project.go       absolute ffcut.Project construction
   errors.go        typed, contextual errors
 ```
 
@@ -154,19 +154,20 @@ The generator applies checks in this order:
 
 1. engine invariants and exact-combination uniqueness;
 2. source/transition feasibility;
-3. custom and built-in constraints against accepted history;
+3. template built-ins followed by custom constraints against accepted history;
 4. Project construction;
 5. history commit.
 
 Rejected tuples are never reconsidered. The result is greedy and order-dependent; no maximum-cardinality claim is made.
 
-`Next` has explicit `Yielded`, `Exhausted` and `BudgetExceeded` states. Context controls cancellation; a scan budget prevents a single call from traversing an unbounded rejected region. The generator is intentionally not concurrency-safe.
+`Next` has explicit `Yielded`, `Exhausted` and `BudgetExceeded` states. Context controls cancellation; a scan budget prevents a single call from traversing an unbounded rejected region. Concurrent `Next` consumption is unsupported, and an atomic re-entry guard returns `ErrConcurrentNext` rather than silently serializing callers or allowing a data race.
 
 ## 8. Constraint Contract
 
 ```go
 type Constraint interface {
     ID() string
+    Fingerprint() string
     Check(candidate CandidateView, history HistoryView) (Decision, error)
 }
 ```

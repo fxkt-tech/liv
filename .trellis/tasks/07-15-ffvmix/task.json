@@ -3,7 +3,7 @@
   "name": "ffvmix",
   "title": "FFVMix 混剪模块",
   "description": "",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": "ffcut,ffprobe,ffvmix",
   "package": null,
