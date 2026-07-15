@@ -74,3 +74,37 @@ Implemented precise ffprobe durations and the FFVMix template compiler with loca
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: FFVMix lazy generator
+
+**Date**: 2026-07-15
+**Task**: FFVMix lazy generator
+**Branch**: `main`
+
+### Summary
+
+Implemented deterministic weighted lazy combination traversal, immutable constraint views and built-ins, resumable search budgets, seeded trim resolution, validated ffcut.Project construction with BGM and global layers, provenance, concurrency protection, comprehensive tests, and the generator code-spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dd0472f` | (see git log) |
+| `2e30211` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
