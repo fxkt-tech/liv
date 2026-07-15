@@ -21,6 +21,7 @@ This directory contains guidelines for backend development. Fill in each file wi
 | [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | To fill |
 | [FFcut Project v2](./ffcut-project-v2.md) | Typed timeline protocol and validation boundary | Established |
 | [FFVMix Template Compiler](./ffvmix-template-compiler.md) | Persistent templates, local asset compilation and immutable results | Established |
+| [FFVMix Lazy Generator](./ffvmix-generator.md) | Deterministic lazy enumeration, pure constraints and Project construction | Established |
 
 ---
 

@@ -52,6 +52,10 @@ type Constraint interface {
 
 CandidateView exposes immutable selections, normalized paths, source/timeline durations, transitions, BGM and fingerprints. It does not expose a full Project. HistoryView exposes accepted summaries only.
 
+The view contract and built-in implementations live in the independent `ffvmix/constraints` package; root `ffvmix` aliases those types. This keeps the dependency direction `ffvmix -> ffvmix/constraints -> ffcut` and avoids a root/subpackage import cycle.
+
+`MaxSimilarity` is symmetric per slot: the numerator is the source-range intersection only when slot and normalized path match; the denominator sums the larger source duration for each aligned slot. Equality with the configured maximum is accepted. Video-path occurrences and BGM-path occurrences use independent counters.
+
 `Decision` contains Accept/Reject and a stable reason code. Generator stats aggregate attempts and rejections by reason.
 
 ## Search Budget
@@ -77,3 +81,5 @@ The generator depends only on `ffcut` protocol types and compiled metadata, neve
 ## Concurrency
 
 The public contract states that concurrent Next calls are unsupported. The implementation uses a lightweight re-entry guard to fail clearly rather than allowing silent data races; it does not serialize callers because scheduling order would undermine reproducibility.
+
+Synthetic BGM-dimension and Project IDs are derived deterministically and extended when necessary so raw persisted IDs cannot make otherwise valid generated Projects fail uniqueness validation.
