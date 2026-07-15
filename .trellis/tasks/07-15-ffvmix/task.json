@@ -1,0 +1,30 @@
+{
+  "id": "ffvmix",
+  "name": "ffvmix",
+  "title": "FFVMix 混剪模块",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": "ffcut,ffprobe,ffvmix",
+  "package": null,
+  "priority": "P2",
+  "creator": "Justyer",
+  "assignee": "Justyer",
+  "createdAt": "2026-07-15",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "07-15-ffvmix-generator",
+    "07-15-ffvmix-template-compiler",
+    "07-15-ffcut-project-v2"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
