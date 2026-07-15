@@ -3,7 +3,7 @@
   "name": "ffvmix-template-compiler",
   "title": "FFVMix 模板编译器",
   "description": "",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": "ffprobe,ffvmix",
   "package": null,

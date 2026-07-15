@@ -20,15 +20,15 @@
 
 ## Acceptance Criteria
 
-- [ ] 模板 JSON round-trip 保留所有 ID、顺序和策略。
-- [ ] 同一文件被多个候选引用时只探测一次。
-- [ ] 相对路径不受进程当前目录影响。
-- [ ] 文件缺失、无视频流、区间越界和无效引用可一次返回多个错误。
-- [ ] 无音频流的视频能成功编译并标记为静音。
-- [ ] speed/trim/loop/freeze/reject 方案能被确定地预计算。
-- [ ] SRT/ASS 与结构化字幕最终得到相同的规范化 cue 类型。
-- [ ] 编译结束后生成阶段不需要再次 FFprobe。
-- [ ] 单元测试使用 fake prober；真实 FFprobe 集成测试使用仓库 fixture 或动态生成素材。
+- [x] 模板 JSON round-trip 保留所有 ID、顺序和策略。
+- [x] 同一文件被多个候选引用时只探测一次。
+- [x] 相对路径不受进程当前目录影响。
+- [x] 文件缺失、无视频流、区间越界和无效引用可一次返回多个错误。
+- [x] 无音频流的视频能成功编译并标记为静音。
+- [x] speed/trim/loop/freeze/reject 方案能被确定地预计算。
+- [x] SRT/ASS 与结构化字幕最终得到相同的规范化 cue 类型。
+- [x] 编译结束后生成阶段不需要再次 FFprobe。
+- [x] 单元测试使用 fake prober；真实 FFprobe 集成测试使用仓库 fixture 或动态生成素材。
 
 ## Out of Scope
 

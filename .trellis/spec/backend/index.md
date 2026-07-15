@@ -20,6 +20,7 @@ This directory contains guidelines for backend development. Fill in each file wi
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
 | [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | To fill |
 | [FFcut Project v2](./ffcut-project-v2.md) | Typed timeline protocol and validation boundary | Established |
+| [FFVMix Template Compiler](./ffvmix-template-compiler.md) | Persistent templates, local asset compilation and immutable results | Established |
 
 ---
 

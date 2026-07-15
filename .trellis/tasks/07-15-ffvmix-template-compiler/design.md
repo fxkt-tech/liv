@@ -20,7 +20,7 @@ Constructors allocate IDs once. Direct JSON decoding is allowed, but `Compile` r
 1. Structural validation with stable field paths.
 2. Resolve local paths against explicit base directory.
 3. Build a unique-path probe worklist.
-4. Probe with bounded concurrency and collect all failures.
+4. Probe video, BGM, background-image and image-layer assets with bounded concurrency and collect all failures; fonts and subtitle text files are fingerprinted without FFprobe.
 5. Validate first video stream and optional first audio stream.
 6. Normalize duration and source ranges to `time.Duration`.
 7. Capture fast or strict file fingerprints.
@@ -32,6 +32,8 @@ Constructors allocate IDs once. Direct JSON decoding is allowed, but `Compile` r
 ## Probe Seam
 
 Production uses the repository `ffprobe` package directly. A minimal internal prober interface exists only at the I/O seam so unit tests can provide deterministic metadata without executing a process. It does not become part of the public Template interface.
+
+`ffprobe` must not import the root `ffmpeg` package. That seemingly small reuse creates a transitive dependency from `ffvmix` to renderer/filter code.
 
 The ffprobe model must stop using `float32` duration. Prefer parsing the original decimal duration into `time.Duration` through a checked decimal/string path; `float64` is acceptable only as an intermediate compatibility step.
 
@@ -47,6 +49,10 @@ Each compiled source stores one of:
 - infeasible reason.
 
 Infeasible sources remain represented for diagnostics but never become generator choices. A required slot with no feasible source is a compile error.
+
+## Global Timing Feasibility
+
+Transition compatibility is a graph over adjacent video candidates. The compiler uses a shortest-path dynamic program over that graph to find the minimum valid output duration without materializing combinations. Absolute layers, slot-local layers, subtitle cues and BGM start/fade settings must fit their minimum applicable duration so a fixed global configuration cannot silently invalidate only shorter generated results.
 
 ## Immutable Result
 
