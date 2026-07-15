@@ -329,6 +329,131 @@ func TestGeneratedProjectResolvesTimelineBGMAndLayers(t *testing.T) {
 	}
 }
 
+func TestGeneratedProjectAppliesCompiledAdaptationPlans(t *testing.T) {
+	tests := []struct {
+		name         string
+		plan         AdaptationPlan
+		wantSource   time.Duration
+		wantTimeline time.Duration
+		wantRate     float64
+		wantLoop     bool
+		wantFreeze   time.Duration
+	}{
+		{
+			name:       "natural",
+			plan:       generatorPlan(AdaptationNatural, 5*time.Second, 5*time.Second, 1),
+			wantSource: 5 * time.Second, wantTimeline: 5 * time.Second, wantRate: 1,
+		},
+		{
+			name:       "speed up",
+			plan:       generatorPlan(AdaptationSpeedUp, 10*time.Second, 5*time.Second, 2),
+			wantSource: 10 * time.Second, wantTimeline: 5 * time.Second, wantRate: 2,
+		},
+		{
+			name:       "slow down",
+			plan:       generatorPlan(AdaptationSlowDown, 5*time.Second, 10*time.Second, 0.5),
+			wantSource: 5 * time.Second, wantTimeline: 10 * time.Second, wantRate: 0.5,
+		},
+		{
+			name: "loop",
+			plan: func() AdaptationPlan {
+				plan := generatorPlan(AdaptationLoop, 5*time.Second, 10*time.Second, 1)
+				plan.Loop = true
+				return plan
+			}(),
+			wantSource: 5 * time.Second, wantTimeline: 10 * time.Second, wantRate: 1, wantLoop: true,
+		},
+		{
+			name: "freeze",
+			plan: func() AdaptationPlan {
+				plan := generatorPlan(AdaptationFreeze, 5*time.Second, 10*time.Second, 1)
+				plan.FreezeLastFrame = generatorDuration(5 * time.Second)
+				return plan
+			}(),
+			wantSource: 5 * time.Second, wantTimeline: 10 * time.Second, wantRate: 1, wantFreeze: 5 * time.Second,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			compiled := generatorFixture()
+			compiled.slots = compiled.slots[:1]
+			compiled.joins = nil
+			compiled.bgms = nil
+			compiled.slots[0].Videos = compiled.slots[0].Videos[:1]
+			compiled.slots[0].Videos[0].Plan = test.plan
+
+			project := nextProject(t, newTestGenerator(t, compiled, WithSeed(21)))
+			clip := project.Video.Clips[0]
+			if err := project.Validate(); err != nil {
+				t.Fatalf("Project.Validate() error = %v", err)
+			}
+			if got := clip.SourceRange.Duration; got != generatorDuration(test.wantSource) {
+				t.Fatalf("source duration = %s, want %s", got.Std(), test.wantSource)
+			}
+			if got := clip.TimelineRange.Duration; got != generatorDuration(test.wantTimeline) {
+				t.Fatalf("timeline duration = %s, want %s", got.Std(), test.wantTimeline)
+			}
+			if clip.Playback.Rate != test.wantRate || clip.Playback.Loop != test.wantLoop || clip.Playback.FreezeLastFrame != generatorDuration(test.wantFreeze) {
+				t.Fatalf("playback = %+v", clip.Playback)
+			}
+		})
+	}
+}
+
+func TestGeneratedProjectBackgroundVariants(t *testing.T) {
+	tests := []struct {
+		name       string
+		background CompiledBackground
+		assert     func(*testing.T, ffcut.Background)
+	}{
+		{
+			name: "color",
+			background: CompiledBackground{
+				Kind: BackgroundKindColor, Color: &ColorBackgroundSpec{Color: "#123456"},
+			},
+			assert: func(t *testing.T, background ffcut.Background) {
+				if background.Color == nil || background.Color.Color != "#123456" {
+					t.Fatalf("color background = %+v", background)
+				}
+			},
+		},
+		{
+			name: "image",
+			background: CompiledBackground{
+				Kind:  BackgroundKindImage,
+				Image: &CompiledImageBackground{Asset: generatorAsset("/background.png", 30), Fit: ffcut.FitModeContain},
+			},
+			assert: func(t *testing.T, background ffcut.Background) {
+				if background.Image == nil || background.Image.Source.Path != "/background.png" || background.Image.Fit != ffcut.FitModeContain {
+					t.Fatalf("image background = %+v", background)
+				}
+			},
+		},
+		{
+			name: "blur",
+			background: CompiledBackground{
+				Kind: BackgroundKindBlur, Blur: &BlurBackgroundSpec{Sigma: 12},
+			},
+			assert: func(t *testing.T, background ffcut.Background) {
+				if background.Blur == nil || background.Blur.Sigma != 12 {
+					t.Fatalf("blur background = %+v", background)
+				}
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			compiled := generatorFixture()
+			compiled.background = test.background
+			project := nextProject(t, newTestGenerator(t, compiled, WithSeed(22)))
+			if err := project.Validate(); err != nil {
+				t.Fatalf("Project.Validate() error = %v", err)
+			}
+			test.assert(t, project.Canvas.Background)
+		})
+	}
+}
+
 func TestRandomTrimIsSeededAndBounded(t *testing.T) {
 	compiled := generatorFixture()
 	compiled.slots = compiled.slots[:1]
@@ -498,6 +623,17 @@ func generatorBGM(id, path string, modified int64, weight float64) CompiledBGM {
 	return CompiledBGM{
 		ID: ID(id), Asset: generatorAsset(path, modified),
 		SourceRange: generatorRange(0, 20*time.Second), Gain: 0.5, Weight: weight,
+	}
+}
+
+func generatorPlan(kind AdaptationKind, sourceDuration, timelineDuration time.Duration, rate float64) AdaptationPlan {
+	return AdaptationPlan{
+		Kind:             kind,
+		Feasible:         true,
+		AvailableRange:   generatorRange(0, sourceDuration),
+		SourceDuration:   generatorDuration(sourceDuration),
+		TimelineDuration: generatorDuration(timelineDuration),
+		Rate:             rate,
 	}
 }
 
