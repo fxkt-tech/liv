@@ -39,3 +39,38 @@ Implemented the pure typed FFcut Project v2 timeline protocol, strict aggregate 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: FFVMix template compiler
+
+**Date**: 2026-07-15
+**Task**: FFVMix template compiler
+**Branch**: `main`
+
+### Summary
+
+Implemented precise ffprobe durations and the FFVMix template compiler with local asset probing, deterministic validation, subtitle normalization, duration adaptation planning, immutable compiled output, tests, and compiler contract documentation.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `16d346d` | (see git log) |
+| `7cb5d89` | (see git log) |
+| `0269d06` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
