@@ -143,3 +143,36 @@ Completed the FFVMix parent integration review, added cross-layer adaptation and
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Complete Trellis backend guidelines
+
+**Date**: 2026-07-16
+**Task**: Complete Trellis backend guidelines
+**Branch**: `main`
+
+### Summary
+
+Derived backend package, persistence, error, logging, and quality conventions from the Liv codebase; documented the non-hermetic ffcut/fusion test baseline; completed and archived the bootstrap task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0d013c8` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
