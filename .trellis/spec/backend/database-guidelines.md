@@ -1,51 +1,43 @@
 # Database Guidelines
 
-> Database patterns and conventions for this project.
+> Current status of persistence in this repository.
 
----
+## Status: Not Applicable
 
-## Overview
+Liv currently has no database layer. `go.mod` contains no SQL, ORM, migration,
+key-value store, or database driver dependency, and the repository has no
+schema or migration directory. Therefore there are no project conventions for
+queries, transactions, table names, indexes, or migrations.
 
-<!--
-Document your project's database conventions here.
+Do not invent those conventions during unrelated work.
 
-Questions to answer:
-- What ORM/query library do you use?
-- How are migrations managed?
-- What are the naming conventions for tables/columns?
-- How do you handle transactions?
--->
+## What Exists Instead
 
-(To be filled by the team)
+The project has serialization and local-media boundaries, but neither is a
+database abstraction:
 
----
+- `ffcut.Marshal` / `ffcut.Unmarshal` encode and validate the FFcut v2 JSON
+  protocol (`ffcut/marshal.go`).
+- `ffvmix.MarshalTemplate` / `ffvmix.UnmarshalTemplate` encode editable
+  templates (`ffvmix/codec.go`).
+- `ffvmix.Compile` resolves local files and returns an immutable in-memory
+  `CompiledTemplate`; it does not persist templates (`ffvmix/compile.go`).
+- `ffprobe.FFprobe` reads metadata from a media file by running `ffprobe`; it is
+  an external-process adapter, not a repository (`ffprobe/ffprobe.go`).
 
-## Query Patterns
+Keep persistence concerns out of these protocol and compiler packages unless a
+future requirement explicitly changes their contracts.
 
-<!-- How should queries be written? Batch operations? -->
+## If Persistence Is Added
 
-(To be filled by the team)
+Treat it as a new architectural boundary, not as a utility hidden in `pkg/`.
+Before implementation, define:
 
----
+1. what aggregate is persisted and why JSON files are insufficient;
+2. the owning package and its interface to `ffcut` or `ffvmix`;
+3. driver/ORM choice, transaction ownership, schema naming, and migrations;
+4. tests that do not require a developer's unmanaged database;
+5. the updated dependency direction and this specification.
 
-## Migrations
-
-<!-- How to create and run migrations -->
-
-(To be filled by the team)
-
----
-
-## Naming Conventions
-
-<!-- Table names, column names, index names -->
-
-(To be filled by the team)
-
----
-
-## Common Mistakes
-
-<!-- Database-related mistakes your team has made -->
-
-(To be filled by the team)
+Until that design exists, database-specific code, dependencies, and migration
+files are outside the established project architecture.

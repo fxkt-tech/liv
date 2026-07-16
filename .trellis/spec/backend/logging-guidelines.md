@@ -1,51 +1,59 @@
 # Logging Guidelines
 
-> How logging is done in this project.
+> Observable output in a library that does not own application logging.
 
----
+## Current Logging Model
 
-## Overview
+Liv has no logging dependency, structured log schema, or application log-level
+contract. Core packages return errors and let the embedding application decide
+where and how to log them.
 
-<!--
-Document your project's logging conventions here.
+Do not introduce a logger or emit routine progress messages from library code
+as part of an unrelated feature.
 
-Questions to answer:
-- What logging library do you use?
-- What are the log levels and when to use each?
-- What should be logged?
-- What should NOT be logged (PII, secrets)?
--->
+## Existing Diagnostic Output
 
-(To be filled by the team)
+`ffmpeg` and `ffprobe` have explicit debug/dry-run command output:
 
----
+- `ffmpeg.WithDebug(true)` prints the command before execution.
+- `ffmpeg.WithDry(true)` prints the command and skips execution.
+- `ffprobe.WithDebug(true)` prints the command before execution.
+- `ffprobe.FFprobe.Sentence` records the executed command string.
 
-## Log Levels
+These paths use `fmt.Println(strings.Join(...))` in `ffmpeg/ffmpeg.go` and
+`ffprobe/ffprobe.go`. They print to standard output and are command previews,
+not structured logs.
 
-<!-- When to use each level: debug, info, warn, error -->
+`ffmpeg.WithLogLevel` controls FFmpeg's own `-v` argument. It is not a Go
+application logger and must not be described as one.
 
-(To be filled by the team)
+## Rules for New Code
 
----
+- Return errors from library operations; the caller owns operational logging.
+- Emit command text only behind an explicit debug or dry-run option.
+- Keep normal protocol validation, template compilation, and generation silent.
+- Never add unconditional `fmt.Print*` calls for progress or debugging.
+- Be aware that command previews can contain local paths, URLs, user-agent
+  values, metadata, or other caller-provided arguments. Callers must not enable
+  debug output where those values are sensitive.
+- A future need for structured observability requires an explicit public API
+  design (for example, a callback or injected interface), documented event
+  ownership, and tests. Do not add a package-global logger.
 
-## Structured Logging
+`transcode.go` currently contains an unconditional
+`fmt.Println("处理filter")`. This is legacy debug output and an explicit
+exception; do not copy it as a convention.
 
-<!-- Log format, required fields -->
+## Log Levels and Fields
 
-(To be filled by the team)
+No application log levels or mandatory structured fields are established.
+Define neither until the project adds an actual logging abstraction. Downstream
+services may attach their own operation IDs, media identifiers, durations, and
+error classifications when they log calls into Liv.
 
----
+## Review Checklist
 
-## What to Log
-
-<!-- Important events to log -->
-
-(To be filled by the team)
-
----
-
-## What NOT to Log
-
-<!-- Sensitive data, PII, secrets -->
-
-(To be filled by the team)
+- Is normal library execution silent?
+- Is diagnostic output opt-in and deterministic?
+- Could printed command arguments expose caller data?
+- Is a returned error carrying information that was otherwise only printed?

@@ -1,41 +1,65 @@
 # Backend Development Guidelines
 
-> Best practices for backend development in this project.
-
----
+> Coding contracts for Liv's Go media-processing packages.
 
 ## Overview
 
-This directory contains guidelines for backend development. Fill in each file with your project's specific conventions.
-
----
+Liv is a single-module Go library. The specs in this directory describe its
+package boundaries, error and diagnostic behavior, verification gate, and the
+persisted FFcut/FFVMix contracts. They are derived from the current repository;
+there is no HTTP or database application layer.
 
 ## Guidelines Index
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Database Guidelines](./database-guidelines.md) | ORM patterns, queries, migrations | To fill |
-| [Error Handling](./error-handling.md) | Error types, handling strategies | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | To fill |
+| [Directory Structure](./directory-structure.md) | Package ownership, dependency direction, and file placement | Established |
+| [Database Status](./database-guidelines.md) | Why persistence conventions are currently not applicable | Not applicable |
+| [Error Handling](./error-handling.md) | Sentinels, wrapping, aggregated validation, and command failures | Established |
+| [Logging](./logging-guidelines.md) | Silent library behavior and opt-in command diagnostics | Established |
+| [Quality](./quality-guidelines.md) | Go verification gate, tests, and review rules | Established |
 | [FFcut Project v2](./ffcut-project-v2.md) | Typed timeline protocol and validation boundary | Established |
-| [FFVMix Template Compiler](./ffvmix-template-compiler.md) | Persistent templates, local asset compilation and immutable results | Established |
-| [FFVMix Lazy Generator](./ffvmix-generator.md) | Deterministic lazy enumeration, pure constraints and Project construction | Established |
+| [FFVMix Template Compiler](./ffvmix-template-compiler.md) | Persistent templates, local asset compilation, and immutable results | Established |
+| [FFVMix Lazy Generator](./ffvmix-generator.md) | Deterministic lazy enumeration, pure constraints, and project construction | Established |
 
----
+## Pre-Development Checklist
 
-## How to Fill These Guidelines
+Always read:
 
-For each guideline file:
+- [Directory Structure](./directory-structure.md)
+- [Quality](./quality-guidelines.md)
 
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
+Then read the guides matching the change:
 
-The goal is to help AI assistants and new team members understand how YOUR project works.
+- Errors, validation, codecs, or external commands:
+  [Error Handling](./error-handling.md)
+- Debug/dry-run output or observability: [Logging](./logging-guidelines.md)
+- FFcut wire types, timeline, validation, or JSON:
+  [FFcut Project v2](./ffcut-project-v2.md)
+- FFVMix template or compilation:
+  [FFVMix Template Compiler](./ffvmix-template-compiler.md)
+- FFVMix enumeration, constraints, or project construction:
+  [FFVMix Lazy Generator](./ffvmix-generator.md)
+- Persistence: read [Database Status](./database-guidelines.md), then design and
+  document the new boundary before implementation because none exists today.
 
----
+## Quality Check
 
-**Language**: All documentation should be written in **English**.
+For Go changes:
+
+```bash
+gofmt -w <changed-go-files>
+go vet ./...
+go test ./...
+```
+
+Use `make test` when verbose package output and coverage are useful. For spec
+changes, also verify:
+
+```bash
+rg -n "[T]o be filled|[T]o fill|TODO:[[:space:]]*fill" .trellis/spec
+```
+
+Any match must be reviewed; finished specs must not contain template prose.
+Check that this index lists every backend spec and that code paths cited by the
+changed documents still exist.
