@@ -31,7 +31,9 @@ func (paths *pathList) Set(value string) error {
 	return nil
 }
 
-type options struct {
+// mixExample owns the complete example lifecycle. Its methods move the same
+// object from CLI configuration to Template, Generator, and persisted output.
+type mixExample struct {
 	baseDir   string
 	outputDir string
 	count     int
@@ -41,106 +43,104 @@ type options struct {
 	bgms      pathList
 	watermark string
 	subtitle  string
+
+	template  *ffvmix.Template
+	generator *ffvmix.Generator
 }
 
 func main() {
-	if err := run(context.Background()); err != nil {
+	example := new(mixExample)
+	example.parseFlags()
+	if err := example.run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func run(ctx context.Context) error {
-	config := parseOptions()
-	if err := config.validate(); err != nil {
-		return err
-	}
-
-	baseDir, err := filepath.Abs(config.baseDir)
-	if err != nil {
-		return fmt.Errorf("resolve base directory: %w", err)
-	}
-	outputDir, err := filepath.Abs(config.outputDir)
-	if err != nil {
-		return fmt.Errorf("resolve output directory: %w", err)
-	}
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
-		return fmt.Errorf("create output directory: %w", err)
-	}
-
-	template, err := buildTemplate(config)
-	if err != nil {
-		return err
-	}
-	templateJSON, err := ffvmix.MarshalTemplate(template)
-	if err != nil {
-		return fmt.Errorf("marshal template: %w", err)
-	}
-	if err := writeJSON(filepath.Join(outputDir, "template.ffvmix.json"), templateJSON); err != nil {
-		return err
-	}
-
-	// Compile is FFVMix's only I/O phase: it resolves local paths, stats and
-	// fingerprints files, and probes each unique media file with ffprobe.
-	compiled, err := ffvmix.Compile(ctx, template,
-		ffvmix.WithBaseDir(baseDir),
-		ffvmix.WithProbeConcurrency(4),
-	)
-	if err != nil {
-		return fmt.Errorf("compile template: %w", err)
-	}
-
-	// A custom constraint is a pure plugin function. This example rejects
-	// assets whose base name contains "draft"; HistoryView is also available
-	// for rules based on previously accepted results.
-	generator, err := ffvmix.NewGenerator(compiled,
-		ffvmix.WithSeed(config.seed),
-		ffvmix.WithConstraintFunc("no-draft-assets", "no-draft-assets/v1", rejectDraftAssets),
-	)
-	if err != nil {
-		return fmt.Errorf("create generator: %w", err)
-	}
-
-	return writeProjects(ctx, generator, outputDir, config.count)
-}
-
-func parseOptions() options {
-	var config options
-	flag.StringVar(&config.baseDir, "base", ".", "base directory used to resolve relative asset paths")
-	flag.StringVar(&config.outputDir, "out", "ffvmix-output", "directory for the template and generated FFcut projects")
-	flag.IntVar(&config.count, "count", 3, "take at most N generated projects; this does not constrain FFVMix")
-	flag.Uint64Var(&config.seed, "seed", 42, "generation seed; deterministic for the same persisted template")
-	flag.Var(&config.opening, "opening", "opening-slot video path; repeat to add multiple candidates")
-	flag.Var(&config.body, "body", "natural-duration body-slot video path; repeat to add multiple candidates")
-	flag.Var(&config.bgms, "bgm", "background-music path; repeat to add multiple candidates (required)")
-	flag.StringVar(&config.watermark, "watermark", "", "optional global watermark image path")
-	flag.StringVar(&config.subtitle, "subtitle", "", "optional global structured subtitle text")
+func (example *mixExample) parseFlags() {
+	flag.StringVar(&example.baseDir, "base", ".", "base directory used to resolve relative asset paths")
+	flag.StringVar(&example.outputDir, "out", "ffvmix-output", "directory for the template and generated FFcut projects")
+	flag.IntVar(&example.count, "count", 3, "take at most N generated projects; this does not constrain FFVMix")
+	flag.Uint64Var(&example.seed, "seed", 42, "generation seed; deterministic for the same persisted template")
+	flag.Var(&example.opening, "opening", "opening-slot video path; repeat to add multiple candidates")
+	flag.Var(&example.body, "body", "natural-duration body-slot video path; repeat to add multiple candidates")
+	flag.Var(&example.bgms, "bgm", "background-music path; repeat to add multiple candidates (required)")
+	flag.StringVar(&example.watermark, "watermark", "", "optional global watermark image path")
+	flag.StringVar(&example.subtitle, "subtitle", "", "optional global structured subtitle text")
 	flag.Parse()
-	return config
 }
 
-func (config options) validate() error {
+func (example *mixExample) validate() error {
 	switch {
-	case len(config.opening) == 0:
+	case len(example.opening) == 0:
 		return fmt.Errorf("at least one -opening video is required")
-	case len(config.body) == 0:
+	case len(example.body) == 0:
 		return fmt.Errorf("at least one -body video is required")
-	case len(config.bgms) == 0:
+	case len(example.bgms) == 0:
 		return fmt.Errorf("at least one -bgm is required")
-	case config.count <= 0:
+	case example.count <= 0:
 		return fmt.Errorf("-count must be positive")
 	default:
 		return nil
 	}
 }
 
-func buildTemplate(config options) (*ffvmix.Template, error) {
+func (example *mixExample) run(ctx context.Context) error {
+	if err := example.validate(); err != nil {
+		return err
+	}
+
+	var err error
+	example.baseDir, err = filepath.Abs(example.baseDir)
+	if err != nil {
+		return fmt.Errorf("resolve base directory: %w", err)
+	}
+	example.outputDir, err = filepath.Abs(example.outputDir)
+	if err != nil {
+		return fmt.Errorf("resolve output directory: %w", err)
+	}
+	if err := os.MkdirAll(example.outputDir, 0o755); err != nil {
+		return fmt.Errorf("create output directory: %w", err)
+	}
+
+	if err := example.buildTemplate(); err != nil {
+		return err
+	}
+	templateJSON, err := ffvmix.MarshalTemplate(example.template)
+	if err != nil {
+		return fmt.Errorf("marshal template: %w", err)
+	}
+	if err := example.writeJSON("template.ffvmix.json", templateJSON); err != nil {
+		return err
+	}
+
+	// Compilation is FFVMix's only I/O phase. Generation below reads only the
+	// immutable compiled state owned by Generator.
+	compiled, err := ffvmix.Compile(ctx, example.template,
+		ffvmix.WithBaseDir(example.baseDir),
+		ffvmix.WithProbeConcurrency(4),
+	)
+	if err != nil {
+		return fmt.Errorf("compile template: %w", err)
+	}
+	example.generator, err = ffvmix.NewGenerator(compiled,
+		ffvmix.WithSeed(example.seed),
+		ffvmix.WithConstraintFunc("no-draft-assets", "no-draft-assets/v1", rejectDraftAssets),
+	)
+	if err != nil {
+		return fmt.Errorf("create generator: %w", err)
+	}
+
+	return example.generate(ctx)
+}
+
+func (example *mixExample) buildTemplate() error {
 	openingDuration, err := ffcut.NewDuration(5 * time.Second)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	fadeDuration, err := ffcut.NewDuration(500 * time.Millisecond)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	defaults := ffvmix.DefaultSlotDefaults()
@@ -148,7 +148,7 @@ func buildTemplate(config options) (*ffvmix.Template, error) {
 	defaults.Underflow = ffvmix.UnderflowLoop
 	defaults.Trim = ffvmix.TrimCenter
 
-	template := ffvmix.NewTemplate(ffvmix.TemplateConfig{
+	example.template = ffvmix.NewTemplate(ffvmix.TemplateConfig{
 		Canvas: ffvmix.CanvasSpec{
 			Width:     1080,
 			Height:    1920,
@@ -163,80 +163,93 @@ func buildTemplate(config options) (*ffvmix.Template, error) {
 
 	// A slot with TargetDuration is exactly that long. Longer videos are
 	// center-trimmed and shorter videos are looped by the configured policies.
-	opening, err := template.AddSlot(ffvmix.SlotConfig{
+	opening, err := example.template.AddSlot(ffvmix.SlotConfig{
 		Name:           "opening",
 		TargetDuration: &openingDuration,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("add opening slot: %w", err)
+		return fmt.Errorf("add opening slot: %w", err)
 	}
-	if err := addVideos(opening, config.opening); err != nil {
-		return nil, err
+	for _, path := range example.opening {
+		if _, err := opening.AddVideo(ffvmix.VideoSourceConfig{Path: path}); err != nil {
+			return fmt.Errorf("add opening video %q: %w", path, err)
+		}
 	}
 
 	// A slot without TargetDuration keeps the selected video's natural length.
-	body, err := template.AddSlot(ffvmix.SlotConfig{Name: "body"})
+	body, err := example.template.AddSlot(ffvmix.SlotConfig{Name: "body"})
 	if err != nil {
-		return nil, fmt.Errorf("add body slot: %w", err)
+		return fmt.Errorf("add body slot: %w", err)
 	}
-	if err := addVideos(body, config.body); err != nil {
-		return nil, err
+	for _, path := range example.body {
+		if _, err := body.AddVideo(ffvmix.VideoSourceConfig{Path: path}); err != nil {
+			return fmt.Errorf("add body video %q: %w", path, err)
+		}
 	}
 
-	join, err := template.AddJoin(ffvmix.JoinConfig{
+	join, err := example.template.AddJoin(ffvmix.JoinConfig{
 		FromSlotID: opening.ID,
 		ToSlotID:   body.ID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("add join: %w", err)
+		return fmt.Errorf("add join: %w", err)
 	}
 	if _, err := join.AddTransition(ffvmix.TransitionConfig{
 		Kind: ffcut.TransitionKindCut,
 	}); err != nil {
-		return nil, fmt.Errorf("add cut transition: %w", err)
+		return fmt.Errorf("add cut transition: %w", err)
 	}
 	if _, err := join.AddTransition(ffvmix.TransitionConfig{
 		Kind:           ffcut.TransitionKindFade,
 		Duration:       fadeDuration,
 		AudioCrossfade: true,
 	}); err != nil {
-		return nil, fmt.Errorf("add fade transition: %w", err)
+		return fmt.Errorf("add fade transition: %w", err)
 	}
 
 	bgmGain := 0.25
-	for _, path := range config.bgms {
-		if _, err := template.AddBGM(ffvmix.BGMConfig{
+	for _, path := range example.bgms {
+		if _, err := example.template.AddBGM(ffvmix.BGMConfig{
 			Path: path,
 			Loop: true,
 			Gain: &bgmGain,
 		}); err != nil {
-			return nil, fmt.Errorf("add BGM %q: %w", path, err)
+			return fmt.Errorf("add BGM %q: %w", path, err)
 		}
 	}
 
-	if config.watermark != "" {
+	if example.watermark != "" {
 		opacity := 0.9
-		if _, err := template.AddImageLayer(ffvmix.ImageLayerConfig{
+		if _, err := example.template.AddImageLayer(ffvmix.ImageLayerConfig{
 			Timing:  ffvmix.FullOutputLayerTiming(),
-			Path:    config.watermark,
+			Path:    example.watermark,
 			Opacity: &opacity,
-			Geometry: percentGeometry(
-				ffcut.AnchorTopLeft,
-				85, 3, 12, 12,
-			),
+			Geometry: ffcut.Geometry{
+				Anchor: ffcut.AnchorTopLeft,
+				X:      ffcut.Length{Value: 85, Unit: ffcut.LengthUnitPercent},
+				Y:      ffcut.Length{Value: 3, Unit: ffcut.LengthUnitPercent},
+				Width:  ffcut.Length{Value: 12, Unit: ffcut.LengthUnitPercent},
+				Height: ffcut.Length{Value: 12, Unit: ffcut.LengthUnitPercent},
+			},
 		}); err != nil {
-			return nil, fmt.Errorf("add watermark: %w", err)
+			return fmt.Errorf("add watermark: %w", err)
 		}
 	}
 
-	if strings.TrimSpace(config.subtitle) != "" {
+	if strings.TrimSpace(example.subtitle) != "" {
 		cueDuration, err := ffcut.NewDuration(2 * time.Second)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if _, err := template.AddSubtitleLayer(ffvmix.SubtitleLayerConfig{
+		if _, err := example.template.AddSubtitleLayer(ffvmix.SubtitleLayerConfig{
 			Timing: ffvmix.FullOutputLayerTiming(),
-			Region: percentGeometry(ffcut.AnchorTopLeft, 10, 75, 80, 20),
+			Region: ffcut.Geometry{
+				Anchor: ffcut.AnchorTopLeft,
+				X:      ffcut.Length{Value: 10, Unit: ffcut.LengthUnitPercent},
+				Y:      ffcut.Length{Value: 75, Unit: ffcut.LengthUnitPercent},
+				Width:  ffcut.Length{Value: 80, Unit: ffcut.LengthUnitPercent},
+				Height: ffcut.Length{Value: 20, Unit: ffcut.LengthUnitPercent},
+			},
 			Style: ffvmix.SubtitleStyleSpec{
 				FontFamily:      "sans-serif",
 				FontSize:        ffcut.Length{Value: 42, Unit: ffcut.LengthUnitPixel},
@@ -246,52 +259,24 @@ func buildTemplate(config options) (*ffvmix.Template, error) {
 			},
 			Input: ffvmix.StructuredSubtitles([]ffvmix.SubtitleCueSpec{{
 				Range: ffcut.TimeRange{Start: 0, Duration: cueDuration},
-				Text:  config.subtitle,
+				Text:  example.subtitle,
 			}}),
 		}); err != nil {
-			return nil, fmt.Errorf("add subtitle: %w", err)
+			return fmt.Errorf("add subtitle: %w", err)
 		}
 	}
 
-	// Built-in history constraints are persisted in the template. They filter
-	// accepted outputs without setting a total generation count.
-	template.AddMaxSimilarity(0.8)
-	template.AddMaxVideoAssetUses(2)
-	return template, nil
-}
-
-func addVideos(slot *ffvmix.Slot, paths []string) error {
-	for _, path := range paths {
-		if _, err := slot.AddVideo(ffvmix.VideoSourceConfig{Path: path}); err != nil {
-			return fmt.Errorf("add video %q: %w", path, err)
-		}
-	}
+	// These constraints belong to the Template. They restrict accepted history,
+	// but they do not impose a total output count.
+	example.template.AddMaxSimilarity(0.8)
+	example.template.AddMaxVideoAssetUses(2)
 	return nil
 }
 
-func percentGeometry(anchor ffcut.Anchor, x, y, width, height float64) ffcut.Geometry {
-	return ffcut.Geometry{
-		Anchor: anchor,
-		X:      ffcut.Length{Value: x, Unit: ffcut.LengthUnitPercent},
-		Y:      ffcut.Length{Value: y, Unit: ffcut.LengthUnitPercent},
-		Width:  ffcut.Length{Value: width, Unit: ffcut.LengthUnitPercent},
-		Height: ffcut.Length{Value: height, Unit: ffcut.LengthUnitPercent},
-	}
-}
-
-func rejectDraftAssets(candidate ffvmix.CandidateView, _ ffvmix.HistoryView) (ffvmix.Decision, error) {
-	for _, video := range candidate.Videos() {
-		if strings.Contains(strings.ToLower(filepath.Base(video.Path)), "draft") {
-			return ffvmix.Reject("draft_asset"), nil
-		}
-	}
-	return ffvmix.Accept(), nil
-}
-
-func writeProjects(ctx context.Context, generator *ffvmix.Generator, outputDir string, count int) error {
+func (example *mixExample) generate(ctx context.Context) error {
 	generated := 0
-	for generated < count {
-		result, err := generator.Next(ctx)
+	for generated < example.count {
+		result, err := example.generator.Next(ctx)
 		if err != nil {
 			return fmt.Errorf("generate project: %w", err)
 		}
@@ -302,14 +287,14 @@ func writeProjects(ctx context.Context, generator *ffvmix.Generator, outputDir s
 				return fmt.Errorf("marshal FFcut project: %w", err)
 			}
 			generated++
-			path := filepath.Join(outputDir, fmt.Sprintf("project-%03d.ffcut.json", generated))
-			if err := writeJSON(path, data); err != nil {
+			name := fmt.Sprintf("project-%03d.ffcut.json", generated)
+			if err := example.writeJSON(name, data); err != nil {
 				return err
 			}
-			fmt.Printf("wrote %s\n", path)
+			fmt.Printf("wrote %s\n", filepath.Join(example.outputDir, name))
 		case ffvmix.BudgetExceeded:
-			// Next preserves progress, so continue until one project is yielded or
-			// the finite combination space is exhausted.
+			// Next preserves progress. Continue until a project is yielded or the
+			// finite combination space is exhausted.
 			continue
 		case ffvmix.Exhausted:
 			fmt.Printf("combination space exhausted after %d output(s)\n", generated)
@@ -319,13 +304,14 @@ func writeProjects(ctx context.Context, generator *ffvmix.Generator, outputDir s
 		}
 	}
 
-	stats := generator.Stats()
+	stats := example.generator.Stats()
 	fmt.Printf("took %d output(s): attempts=%d rejected=%d seed=%d\n",
-		generated, stats.Attempts, stats.Rejected, generator.Seed())
+		generated, stats.Attempts, stats.Rejected, example.generator.Seed())
 	return nil
 }
 
-func writeJSON(path string, data []byte) error {
+func (example *mixExample) writeJSON(name string, data []byte) error {
+	path := filepath.Join(example.outputDir, name)
 	var formatted bytes.Buffer
 	if err := json.Indent(&formatted, data, "", "  "); err != nil {
 		return fmt.Errorf("format %s: %w", path, err)
@@ -335,4 +321,15 @@ func writeJSON(path string, data []byte) error {
 		return fmt.Errorf("write %s: %w", path, err)
 	}
 	return nil
+}
+
+// rejectDraftAssets is intentionally a function: ConstraintFunc is FFVMix's
+// plugin seam. The generator supplies immutable candidate and history views.
+func rejectDraftAssets(candidate ffvmix.CandidateView, _ ffvmix.HistoryView) (ffvmix.Decision, error) {
+	for _, video := range candidate.Videos() {
+		if strings.Contains(strings.ToLower(filepath.Base(video.Path)), "draft") {
+			return ffvmix.Reject("draft_asset"), nil
+		}
+	}
+	return ffvmix.Accept(), nil
 }
