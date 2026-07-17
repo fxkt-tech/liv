@@ -294,6 +294,9 @@ func (v *projectValidator) validateLayer(path string, layer Layer, projectDurati
 	if layer.Image != nil {
 		payloads++
 	}
+	if layer.Media != nil {
+		payloads++
+	}
 	if layer.Subtitle != nil {
 		payloads++
 	}
@@ -306,6 +309,10 @@ func (v *projectValidator) validateLayer(path string, layer Layer, projectDurati
 		if layer.Image == nil {
 			v.add(path+".image", "is required when kind is image", nil)
 		}
+	case LayerKindMedia:
+		if layer.Media == nil {
+			v.add(path+".media", "is required when kind is media", nil)
+		}
 	case LayerKindSubtitle:
 		if layer.Subtitle == nil {
 			v.add(path+".subtitle", "is required when kind is subtitle", nil)
@@ -317,8 +324,34 @@ func (v *projectValidator) validateLayer(path string, layer Layer, projectDurati
 	if layer.Image != nil {
 		v.validateImageLayer(path+".image", *layer.Image)
 	}
+	if layer.Media != nil {
+		v.validateMediaLayer(path+".media", *layer.Media)
+	}
 	if layer.Subtitle != nil {
 		v.validateSubtitleLayer(path+".subtitle", *layer.Subtitle, layer.Range, layerRangeValid)
+	}
+}
+
+func (v *projectValidator) validateMediaLayer(path string, layer MediaLayer) {
+	switch layer.Kind {
+	case MediaKindImage:
+		if layer.Loop {
+			v.add(path+".loop", "must be false for a static image", nil)
+		}
+	case MediaKindAnimation, MediaKindVideo:
+		if !layer.Loop {
+			v.add(path+".loop", "must be true for animation and video layers", nil)
+		}
+	default:
+		v.add(path+".kind", fmt.Sprintf("has unsupported value %q", layer.Kind), nil)
+	}
+	v.validateLocalSource(path+".source", layer.Source)
+	v.validateGeometry(path+".geometry", layer.Geometry)
+	if !finite(layer.Opacity) || layer.Opacity < 0 || layer.Opacity > 1 {
+		v.add(path+".opacity", "must be between 0 and 1", nil)
+	}
+	if !finite(layer.RotationDegrees) {
+		v.add(path+".rotation_degrees", "must be finite", nil)
 	}
 }
 
@@ -336,6 +369,12 @@ func (v *projectValidator) validateImageLayer(path string, layer ImageLayer) {
 func (v *projectValidator) validateSubtitleLayer(path string, layer SubtitleLayer, parentRange TimeRange, parentRangeValid bool) {
 	v.validateGeometry(path+".region", layer.Region)
 	v.validateSubtitleStyle(path+".style", layer.Style)
+	if layer.Opacity != nil && (!finite(*layer.Opacity) || *layer.Opacity < 0 || *layer.Opacity > 1) {
+		v.add(path+".opacity", "must be between 0 and 1", nil)
+	}
+	if !finite(layer.RotationDegrees) {
+		v.add(path+".rotation_degrees", "must be finite", nil)
+	}
 	if len(layer.Cues) == 0 {
 		v.add(path+".cues", "must contain at least one cue", nil)
 	}
@@ -363,6 +402,12 @@ func (v *projectValidator) validateSubtitleStyle(path string, style SubtitleStyl
 	v.validateLength(path+".font_size", style.FontSize, false, true)
 	if strings.TrimSpace(style.Color) == "" {
 		v.add(path+".color", "must not be empty", nil)
+	}
+	if style.StrokeWidth.Unit != "" || style.StrokeWidth.Value != 0 {
+		v.validateLength(path+".stroke_width", style.StrokeWidth, false, false)
+		if style.StrokeWidth.Value > 0 && strings.TrimSpace(style.StrokeColor) == "" {
+			v.add(path+".stroke_color", "must not be empty when stroke width is positive", nil)
+		}
 	}
 	switch style.Align {
 	case TextAlignLeft, TextAlignCenter, TextAlignRight:

@@ -93,6 +93,77 @@ func TestRenderIntegration(t *testing.T) {
 	assertFrameColor(t, ffmpegBin, outputPath, 0.6, 'b')
 }
 
+func TestRenderLayersIntegration(t *testing.T) {
+	ffmpegBin, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		t.Skip("ffmpeg is not installed")
+	}
+	directory := t.TempDir()
+	firstPath := filepath.Join(directory, "red.mp4")
+	secondPath := filepath.Join(directory, "blue.mp4")
+	stickerPath := filepath.Join(directory, "lime.mp4")
+	imagePath := filepath.Join(directory, "yellow.png")
+	animationPath := filepath.Join(directory, "alternating.gif")
+	voicePath := filepath.Join(directory, "voice.wav")
+	createVideoFixture(t, ffmpegBin, firstPath, "red", 440)
+	createVideoFixture(t, ffmpegBin, secondPath, "blue", 550)
+	createVideoFixture(t, ffmpegBin, stickerPath, "lime", 660)
+	createImageFixture(t, ffmpegBin, imagePath, "yellow")
+	createAnimationFixture(t, ffmpegBin, animationPath)
+	runFixtureCommand(t, ffmpegBin,
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "sine=frequency=1000:duration=0.8",
+		"-c:a", "pcm_s16le", voicePath,
+	)
+
+	project := integrationProject(t, firstPath, secondPath, voicePath)
+	totalRange := rendererRange(0, 800*time.Millisecond)
+	project.Layers = []ffcut.Layer{
+		{
+			ID: "looping-video", Kind: ffcut.LayerKindMedia, Range: totalRange,
+			Media: &ffcut.MediaLayer{
+				Kind: ffcut.MediaKindVideo, Source: sourceFromFile(t, "lime-sticker", stickerPath),
+				Geometry: rendererGeometry(0, 0, 180, 320), Opacity: 1, Loop: true,
+			},
+		},
+		{
+			ID: "static-image", Kind: ffcut.LayerKindMedia, Range: rendererRange(0, 200*time.Millisecond),
+			Media: &ffcut.MediaLayer{
+				Kind: ffcut.MediaKindImage, Source: sourceFromFile(t, "yellow-sticker", imagePath),
+				Geometry: rendererGeometry(0, 0, 180, 320), Opacity: 1,
+			},
+		},
+		{
+			ID: "looping-animation", Kind: ffcut.LayerKindMedia, Range: rendererRange(200*time.Millisecond, 400*time.Millisecond),
+			Media: &ffcut.MediaLayer{
+				Kind: ffcut.MediaKindAnimation, Source: sourceFromFile(t, "animated-sticker", animationPath),
+				Geometry: rendererGeometry(0, 0, 180, 320), Opacity: 1, Loop: true,
+			},
+		},
+		{
+			ID: "title", Kind: ffcut.LayerKindSubtitle, Range: totalRange,
+			Subtitle: &ffcut.SubtitleLayer{
+				Region: rendererGeometry(10, 240, 160, 60),
+				Style: ffcut.SubtitleStyle{
+					FontFamily: "sans-serif", FontSize: ffcut.Length{Value: 24, Unit: ffcut.LengthUnitPixel},
+					Color: "#FFFFFF", BackgroundColor: "#00000080", Align: ffcut.TextAlignCenter,
+					StrokeColor: "#000000", StrokeWidth: ffcut.Length{Value: 1, Unit: ffcut.LengthUnitPixel},
+				},
+				Cues: []ffcut.SubtitleCue{{ID: "title-cue", Range: totalRange, Text: "A:B's"}},
+			},
+		},
+	}
+	outputPath := filepath.Join(directory, "layers.mp4")
+	if err := Render(context.Background(), project, outputPath, WithFFmpegBin(ffmpegBin)); err != nil {
+		t.Fatalf("Render() error = %v", err)
+	}
+	assertFrameColor(t, ffmpegBin, outputPath, 0.1, 'y')
+	assertFrameColor(t, ffmpegBin, outputPath, 0.22, 'g')
+	assertFrameColor(t, ffmpegBin, outputPath, 0.34, 'm')
+	assertFrameColor(t, ffmpegBin, outputPath, 0.44, 'g')
+	assertFrameColor(t, ffmpegBin, outputPath, 0.7, 'g')
+}
+
 func createVideoFixture(t *testing.T, ffmpegBin, outputPath, color string, frequency int) {
 	t.Helper()
 	runFixtureCommand(t, ffmpegBin,
@@ -100,6 +171,26 @@ func createVideoFixture(t *testing.T, ffmpegBin, outputPath, color string, frequ
 		"-f", "lavfi", "-i", "color=c="+color+":s=320x240:r=30:d=0.4",
 		"-f", "lavfi", "-i", fmt.Sprintf("sine=frequency=%d:duration=0.4", frequency),
 		"-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", outputPath,
+	)
+}
+
+func createImageFixture(t *testing.T, ffmpegBin, outputPath, color string) {
+	t.Helper()
+	runFixtureCommand(t, ffmpegBin,
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "color=c="+color+":s=180x320",
+		"-frames:v", "1", outputPath,
+	)
+}
+
+func createAnimationFixture(t *testing.T, ffmpegBin, outputPath string) {
+	t.Helper()
+	runFixtureCommand(t, ffmpegBin,
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "color=c=lime:s=180x320:r=10:d=0.1",
+		"-f", "lavfi", "-i", "color=c=magenta:s=180x320:r=10:d=0.1",
+		"-filter_complex", "[0:v][1:v]concat=n=2:v=1:a=0,split[frames][palette-source];[palette-source]palettegen[palette];[frames][palette]paletteuse",
+		"-loop", "0", outputPath,
 	)
 }
 
@@ -212,7 +303,7 @@ func assertFrameColor(t *testing.T, ffmpegBin, path string, at float64, want byt
 	if len(output) < 3 {
 		t.Fatalf("extract frame at %.3f returned %d bytes", at, len(output))
 	}
-	red, _, blue := output[0], output[1], output[2]
+	red, green, blue := output[0], output[1], output[2]
 	switch want {
 	case 'r':
 		if red < 180 || red <= blue*2 {
@@ -221,6 +312,18 @@ func assertFrameColor(t *testing.T, ffmpegBin, path string, at float64, want byt
 	case 'b':
 		if blue < 180 || blue <= red*2 {
 			t.Errorf("frame at %.3f RGB = %v, want blue", at, output[:3])
+		}
+	case 'g':
+		if green < 150 || green <= red*2 || green <= blue*2 {
+			t.Errorf("frame at %.3f RGB = %v, want green", at, output[:3])
+		}
+	case 'y':
+		if red < 150 || green < 150 || blue > 80 {
+			t.Errorf("frame at %.3f RGB = %v, want yellow", at, output[:3])
+		}
+	case 'm':
+		if red < 150 || blue < 150 || green > 80 {
+			t.Errorf("frame at %.3f RGB = %v, want magenta", at, output[:3])
 		}
 	}
 }

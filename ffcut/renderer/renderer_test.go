@@ -59,6 +59,73 @@ func TestRenderBuildsVMixCommand(t *testing.T) {
 	}
 }
 
+func TestRenderBuildsOrderedLayerGraph(t *testing.T) {
+	project := vmixProject(t)
+	directory := t.TempDir()
+	textOpacity := 0.55
+	image := rendererSource(t, "image", filepath.Join(directory, "sticker.png"))
+	animation := rendererSource(t, "animation", filepath.Join(directory, "sticker.gif"))
+	project.Layers = []ffcut.Layer{
+		{
+			ID: "image-layer", Kind: ffcut.LayerKindImage, Range: rendererRange(0, 2*time.Second),
+			Image: &ffcut.ImageLayer{
+				Source: image, Geometry: rendererGeometry(10, 20, 100, 80), Opacity: 0.8,
+			},
+		},
+		{
+			ID: "animation-layer", Kind: ffcut.LayerKindMedia, Range: rendererRange(0, 2*time.Second),
+			Media: &ffcut.MediaLayer{
+				Kind: ffcut.MediaKindAnimation, Source: animation,
+				Geometry: rendererGeometry(120, 40, 90, 90), Opacity: 1, Loop: true,
+			},
+		},
+		{
+			ID: "text-layer", Kind: ffcut.LayerKindSubtitle, Range: rendererRange(0, 2*time.Second),
+			Subtitle: &ffcut.SubtitleLayer{
+				Region:          rendererGeometry(40, 100, 300, 120),
+				Opacity:         &textOpacity,
+				RotationDegrees: 30,
+				Style: ffcut.SubtitleStyle{
+					FontFamily: "sans-serif", FontSize: ffcut.Length{Value: 42, Unit: ffcut.LengthUnitPixel},
+					Color: "#FFFFFF", Align: ffcut.TextAlignCenter,
+					StrokeColor: "#000000", StrokeWidth: ffcut.Length{Value: 2, Unit: ffcut.LengthUnitPixel},
+				},
+				Cues: []ffcut.SubtitleCue{{ID: "title", Range: rendererRange(0, 2*time.Second), Text: "标题"}},
+			},
+		},
+	}
+	runner := &recordingRunner{}
+	if err := Render(context.Background(), project, filepath.Join(directory, "final.mp4"), withRunner(runner)); err != nil {
+		t.Fatalf("Render() error = %v", err)
+	}
+	command := strings.Join(runner.args, " ")
+	for _, want := range []string{
+		"-loop 1 -t 2.000000 -i " + image.Path,
+		"-ignore_loop 0 -stream_loop -1 -t 2.000000 -i " + animation.Path,
+		"colorchannelmixer=aa=0.800000",
+		"overlay=x=10:y=20",
+		"drawtext=textfile='",
+		"expansion=none",
+		"borderw=2.000000:bordercolor=#000000",
+		"colorchannelmixer=aa=0.550000",
+		"rotate=30.000000*PI/180:c=none",
+		"overlay=x=30:y=33",
+		"[4:a:0]atrim=duration=2.000000",
+	} {
+		if !strings.Contains(command, want) {
+			t.Errorf("command = %q, want fragment %q", command, want)
+		}
+	}
+}
+
+func TestRotatedOverlayPositionKeepsOriginalCenter(t *testing.T) {
+	canvas := ffcut.Canvas{Width: 720, Height: 1280}
+	x, y := rotatedOverlayPosition(rendererGeometry(10, 20, 100, 80), 90, canvas)
+	if x != 20 || y != 10 {
+		t.Fatalf("position = (%d, %d), want (20, 10)", x, y)
+	}
+}
+
 func TestRenderRejectsUnsupportedFeatures(t *testing.T) {
 	tests := []struct {
 		name string
@@ -231,4 +298,14 @@ func rendererRange(start, duration time.Duration) ffcut.TimeRange {
 		panic(err)
 	}
 	return ffcut.TimeRange{Start: parsedStart, Duration: parsedDuration}
+}
+
+func rendererGeometry(x, y, width, height float64) ffcut.Geometry {
+	return ffcut.Geometry{
+		Anchor: ffcut.AnchorTopLeft,
+		X:      ffcut.Length{Value: x, Unit: ffcut.LengthUnitPixel},
+		Y:      ffcut.Length{Value: y, Unit: ffcut.LengthUnitPixel},
+		Width:  ffcut.Length{Value: width, Unit: ffcut.LengthUnitPixel},
+		Height: ffcut.Length{Value: height, Unit: ffcut.LengthUnitPixel},
+	}
 }

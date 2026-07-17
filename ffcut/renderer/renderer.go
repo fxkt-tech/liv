@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -34,7 +35,16 @@ func Render(ctx context.Context, project *ffcut.Project, outputPath string, opts
 		}
 	}
 
-	args, err := buildArgs(project, outputPath, config)
+	if err := validateSupported(project); err != nil {
+		return err
+	}
+	textFiles, clearTextFiles, err := materializeSubtitleTexts(project)
+	if err != nil {
+		return err
+	}
+	defer clearTextFiles()
+
+	args, err := buildArgs(project, outputPath, config, textFiles)
 	if err != nil {
 		return err
 	}
@@ -56,7 +66,7 @@ func Render(ctx context.Context, project *ffcut.Project, outputPath string, opts
 	return fmt.Errorf("%w: %w: %s", ErrRenderFailed, err, stderr)
 }
 
-func buildArgs(project *ffcut.Project, outputPath string, config config) ([]string, error) {
+func buildArgs(project *ffcut.Project, outputPath string, config config, textFiles map[subtitleCueKey]string) ([]string, error) {
 	if err := validateSupported(project); err != nil {
 		return nil, err
 	}
@@ -69,6 +79,17 @@ func buildArgs(project *ffcut.Project, outputPath string, config config) ([]stri
 			"-i", clip.Source.Path,
 		)
 	}
+	layerInputs := make(map[int]int)
+	nextInput := len(project.Video.Clips)
+	for index, layer := range project.Layers {
+		source, mediaKind, ok := visualLayerSource(layer)
+		if !ok {
+			continue
+		}
+		args = append(args, visualLayerInputArgs(source.Path, mediaKind, layer.Range.Duration)...)
+		layerInputs[index] = nextInput
+		nextInput++
+	}
 
 	voice := project.Audio[0]
 	args = append(args,
@@ -77,20 +98,40 @@ func buildArgs(project *ffcut.Project, outputPath string, config config) ([]stri
 		"-i", voice.Source.Path,
 	)
 
-	graph := make([]string, 0, len(project.Video.Clips)+2)
+	graph := make([]string, 0, len(project.Video.Clips)+len(project.Layers)*2+2)
 	videoLabels := make([]string, 0, len(project.Video.Clips))
 	for index, clip := range project.Video.Clips {
 		label := fmt.Sprintf("v%d", index)
 		videoLabels = append(videoLabels, fmt.Sprintf("[%s]", label))
 		graph = append(graph, videoFilter(index, label, project.Canvas, clip))
 	}
+	baseLabel := "vout"
+	if len(project.Layers) > 0 {
+		baseLabel = "base"
+	}
 	if len(videoLabels) == 1 {
-		graph = append(graph, videoLabels[0]+"null[vout]")
+		graph = append(graph, videoLabels[0]+"null["+baseLabel+"]")
 	} else {
-		graph = append(graph, strings.Join(videoLabels, "")+fmt.Sprintf("concat=n=%d:v=1:a=0[vout]", len(videoLabels)))
+		graph = append(graph, strings.Join(videoLabels, "")+fmt.Sprintf("concat=n=%d:v=1:a=0[%s]", len(videoLabels), baseLabel))
+	}
+	currentLabel := baseLabel
+	for index, layer := range project.Layers {
+		nextLabel := fmt.Sprintf("layerout%d", index)
+		if index == len(project.Layers)-1 {
+			nextLabel = "vout"
+		}
+		switch layer.Kind {
+		case ffcut.LayerKindImage, ffcut.LayerKindMedia:
+			inputLabel := fmt.Sprintf("layer%d", index)
+			graph = append(graph, visualLayerFilter(layerInputs[index], inputLabel, project.Canvas, layer))
+			graph = append(graph, overlayFilter(currentLabel, inputLabel, nextLabel, project.Canvas, layer))
+		case ffcut.LayerKindSubtitle:
+			graph = append(graph, subtitleLayerFilters(currentLabel, nextLabel, project.Canvas, layer, index, textFiles)...)
+		}
+		currentLabel = nextLabel
 	}
 
-	voiceInput := len(project.Video.Clips)
+	voiceInput := nextInput
 	graph = append(graph, fmt.Sprintf(
 		"[%d:a:0]atrim=duration=%s,asetpts=PTS-STARTPTS,volume=%s[aout]",
 		voiceInput,
@@ -123,8 +164,12 @@ func validateSupported(project *ffcut.Project) error {
 	if project.Canvas.Background.Kind != ffcut.BackgroundKindColor {
 		return unsupported("canvas.background.kind", string(project.Canvas.Background.Kind))
 	}
-	if len(project.Layers) != 0 {
-		return unsupported("layers", "layers are not implemented")
+	for index, layer := range project.Layers {
+		switch layer.Kind {
+		case ffcut.LayerKindImage, ffcut.LayerKindMedia, ffcut.LayerKindSubtitle:
+		default:
+			return unsupported(fmt.Sprintf("layers[%d].kind", index), string(layer.Kind))
+		}
 	}
 	for index, transition := range project.Video.Transitions {
 		if transition.Kind != ffcut.TransitionKindCut {
@@ -148,6 +193,230 @@ func validateSupported(project *ffcut.Project) error {
 		return unsupported("audio[0]", "voice must cover the complete timeline without loop or fades")
 	}
 	return nil
+}
+
+func visualLayerSource(layer ffcut.Layer) (ffcut.LocalSource, ffcut.MediaKind, bool) {
+	if layer.Image != nil {
+		return layer.Image.Source, ffcut.MediaKindImage, true
+	}
+	if layer.Media != nil {
+		return layer.Media.Source, layer.Media.Kind, true
+	}
+	return ffcut.LocalSource{}, "", false
+}
+
+func visualLayerInputArgs(path string, kind ffcut.MediaKind, duration ffcut.Duration) []string {
+	args := make([]string, 0, 8)
+	switch kind {
+	case ffcut.MediaKindImage:
+		args = append(args, "-loop", "1")
+	case ffcut.MediaKindAnimation:
+		args = append(args, "-ignore_loop", "0", "-stream_loop", "-1")
+	case ffcut.MediaKindVideo:
+		args = append(args, "-stream_loop", "-1")
+	}
+	return append(args, "-t", seconds(duration), "-i", path)
+}
+
+func visualLayerFilter(input int, label string, canvas ffcut.Canvas, layer ffcut.Layer) string {
+	geometry, opacity, rotation := visualLayerProperties(layer)
+	_, _, width, height := resolveGeometry(geometry, canvas)
+	frameRate := fmt.Sprintf("%d/%d", canvas.FrameRate.Numerator, canvas.FrameRate.Denominator)
+	filters := []string{
+		fmt.Sprintf("scale=%d:%d", width, height),
+		"setsar=1",
+		"fps=" + frameRate,
+		"format=rgba",
+		fmt.Sprintf("colorchannelmixer=aa=%s", formatFloat(opacity)),
+	}
+	if rotation != 0 {
+		angle := formatFloat(rotation) + "*PI/180"
+		filters = append(filters, fmt.Sprintf("rotate=%s:c=none:ow=rotw(%s):oh=roth(%s)", angle, angle, angle))
+	}
+	filters = append(filters, "setpts=PTS-STARTPTS+"+seconds(layer.Range.Start)+"/TB")
+	return fmt.Sprintf("[%d:v:0]%s[%s]", input, strings.Join(filters, ","), label)
+}
+
+func overlayFilter(currentLabel, inputLabel, outputLabel string, canvas ffcut.Canvas, layer ffcut.Layer) string {
+	geometry, _, rotation := visualLayerProperties(layer)
+	x, y := rotatedOverlayPosition(geometry, rotation, canvas)
+	return overlayAt(currentLabel, inputLabel, outputLabel, x, y, layer.Range)
+}
+
+func overlayAt(currentLabel, inputLabel, outputLabel string, x, y int, value ffcut.TimeRange) string {
+	return fmt.Sprintf(
+		"[%s][%s]overlay=x=%d:y=%d:eof_action=pass:shortest=0:enable='%s'[%s]",
+		currentLabel,
+		inputLabel,
+		x,
+		y,
+		timelineEnable(value),
+		outputLabel,
+	)
+}
+
+func visualLayerProperties(layer ffcut.Layer) (ffcut.Geometry, float64, float64) {
+	if layer.Image != nil {
+		return layer.Image.Geometry, layer.Image.Opacity, layer.Image.RotationDegrees
+	}
+	return layer.Media.Geometry, layer.Media.Opacity, layer.Media.RotationDegrees
+}
+
+func subtitleLayerFilters(currentLabel, outputLabel string, canvas ffcut.Canvas, layer ffcut.Layer, layerIndex int, textFiles map[subtitleCueKey]string) []string {
+	subtitle := layer.Subtitle
+	x, y, width, height := resolveGeometry(subtitle.Region, canvas)
+	fontSize := resolveLength(subtitle.Style.FontSize, float64(canvas.Height))
+	strokeWidth := resolveLength(subtitle.Style.StrokeWidth, float64(canvas.Height))
+	frameRate := fmt.Sprintf("%d/%d", canvas.FrameRate.Numerator, canvas.FrameRate.Denominator)
+	filters := []string{
+		fmt.Sprintf("color=c=black@0.0:s=%dx%d:r=%s:d=%s", width, height, frameRate, seconds(layer.Range.Duration)),
+		"format=rgba",
+		"setpts=PTS-STARTPTS+" + seconds(layer.Range.Start) + "/TB",
+	}
+	for cueIndex, cue := range subtitle.Cues {
+		xExpression := "0"
+		switch subtitle.Style.Align {
+		case ffcut.TextAlignCenter:
+			xExpression = fmt.Sprintf("(%d-text_w)/2", width)
+		case ffcut.TextAlignRight:
+			xExpression = fmt.Sprintf("%d-text_w", width)
+		}
+		options := []string{
+			"textfile='" + escapeDrawtextValue(textFiles[subtitleCueKey{layer: layerIndex, cue: cueIndex}]) + "'",
+			"expansion=none",
+			"x=" + xExpression,
+			fmt.Sprintf("y=(%d-text_h)/2", height),
+			"fontsize=" + formatFloat(fontSize),
+			"fontcolor=" + subtitle.Style.Color,
+			"enable='" + timelineEnable(cue.Range) + "'",
+		}
+		if subtitle.Style.Font != nil {
+			options = append(options, "fontfile='"+escapeDrawtextValue(subtitle.Style.Font.Path)+"'")
+		} else {
+			options = append(options, "font='"+escapeDrawtextValue(subtitle.Style.FontFamily)+"'")
+		}
+		if subtitle.Style.BackgroundColor != "" {
+			options = append(options, "box=1", "boxcolor="+subtitle.Style.BackgroundColor)
+		}
+		if strokeWidth > 0 {
+			options = append(options, "borderw="+formatFloat(strokeWidth), "bordercolor="+subtitle.Style.StrokeColor)
+		}
+		filters = append(filters, "drawtext="+strings.Join(options, ":"))
+	}
+	opacity := 1.0
+	if subtitle.Opacity != nil {
+		opacity = *subtitle.Opacity
+	}
+	filters = append(filters, fmt.Sprintf("colorchannelmixer=aa=%s", formatFloat(opacity)))
+	if subtitle.RotationDegrees != 0 {
+		angle := formatFloat(subtitle.RotationDegrees) + "*PI/180"
+		filters = append(filters, fmt.Sprintf("rotate=%s:c=none:ow=rotw(%s):oh=roth(%s)", angle, angle, angle))
+	}
+	inputLabel := fmt.Sprintf("subtitle%d", layerIndex)
+	visual := fmt.Sprintf("%s[%s]", strings.Join(filters, ","), inputLabel)
+	if subtitle.RotationDegrees != 0 {
+		x, y = rotatedOverlayPosition(subtitle.Region, subtitle.RotationDegrees, canvas)
+	}
+	return []string{
+		visual,
+		overlayAt(currentLabel, inputLabel, outputLabel, x, y, layer.Range),
+	}
+}
+
+type subtitleCueKey struct {
+	layer int
+	cue   int
+}
+
+func materializeSubtitleTexts(project *ffcut.Project) (map[subtitleCueKey]string, func(), error) {
+	count := 0
+	for _, layer := range project.Layers {
+		if layer.Subtitle != nil {
+			count += len(layer.Subtitle.Cues)
+		}
+	}
+	if count == 0 {
+		return map[subtitleCueKey]string{}, func() {}, nil
+	}
+	directory, err := os.MkdirTemp("", "ffcut-text-")
+	if err != nil {
+		return nil, func() {}, fmt.Errorf("%w: create subtitle text directory: %w", ErrInvalidOutput, err)
+	}
+	clear := func() { _ = os.RemoveAll(directory) }
+	files := make(map[subtitleCueKey]string, count)
+	for layerIndex, layer := range project.Layers {
+		if layer.Subtitle == nil {
+			continue
+		}
+		for cueIndex, cue := range layer.Subtitle.Cues {
+			path := filepath.Join(directory, fmt.Sprintf("layer-%03d-cue-%03d.txt", layerIndex, cueIndex))
+			if err = os.WriteFile(path, []byte(cue.Text), 0o600); err != nil {
+				clear()
+				return nil, func() {}, fmt.Errorf("%w: write subtitle text: %w", ErrInvalidOutput, err)
+			}
+			files[subtitleCueKey{layer: layerIndex, cue: cueIndex}] = path
+		}
+	}
+	return files, clear, nil
+}
+
+func resolveGeometry(geometry ffcut.Geometry, canvas ffcut.Canvas) (int, int, int, int) {
+	x := int(math.Round(resolveLength(geometry.X, float64(canvas.Width))))
+	y := int(math.Round(resolveLength(geometry.Y, float64(canvas.Height))))
+	width := int(math.Round(resolveLength(geometry.Width, float64(canvas.Width))))
+	height := int(math.Round(resolveLength(geometry.Height, float64(canvas.Height))))
+	switch geometry.Anchor {
+	case ffcut.AnchorTopRight:
+		x -= width
+	case ffcut.AnchorBottomLeft:
+		y -= height
+	case ffcut.AnchorBottomRight:
+		x -= width
+		y -= height
+	case ffcut.AnchorCenter:
+		x -= width / 2
+		y -= height / 2
+	}
+	return x, y, width, height
+}
+
+func rotatedOverlayPosition(geometry ffcut.Geometry, rotationDegrees float64, canvas ffcut.Canvas) (int, int) {
+	x, y, width, height := resolveGeometry(geometry, canvas)
+	if rotationDegrees == 0 {
+		return x, y
+	}
+	radians := rotationDegrees * math.Pi / 180
+	rotatedWidth := math.Abs(float64(width)*math.Cos(radians)) + math.Abs(float64(height)*math.Sin(radians))
+	rotatedHeight := math.Abs(float64(width)*math.Sin(radians)) + math.Abs(float64(height)*math.Cos(radians))
+	x -= int(math.Round((rotatedWidth - float64(width)) / 2))
+	y -= int(math.Round((rotatedHeight - float64(height)) / 2))
+	return x, y
+}
+
+func resolveLength(length ffcut.Length, axis float64) float64 {
+	if length.Unit == ffcut.LengthUnitPercent {
+		return length.Value * axis / 100
+	}
+	return length.Value
+}
+
+func timelineEnable(value ffcut.TimeRange) string {
+	end, _ := value.End()
+	return fmt.Sprintf("gte(t\\,%s)*lt(t\\,%s)", seconds(value.Start), seconds(end))
+}
+
+func escapeDrawtextValue(value string) string {
+	replacer := strings.NewReplacer(
+		"\\", "\\\\",
+		"'", "\\'",
+		":", "\\:",
+		",", "\\,",
+		";", "\\;",
+		"[", "\\[",
+		"]", "\\]",
+		"\n", "\\n",
+	)
+	return replacer.Replace(value)
 }
 
 func videoFilter(index int, label string, canvas ffcut.Canvas, clip ffcut.VideoClip) string {

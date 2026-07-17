@@ -7,6 +7,7 @@ import (
 )
 
 func validProject() *Project {
+	subtitleOpacity := 0.7
 	return &Project{
 		Version: ProjectVersion,
 		ID:      "project-1",
@@ -75,16 +76,32 @@ func validProject() *Project {
 				},
 			},
 			{
+				ID:    "animation-layer",
+				Kind:  LayerKindMedia,
+				Range: testRange(2*time.Second, 3*time.Second),
+				Media: &MediaLayer{
+					Kind:     MediaKindAnimation,
+					Source:   testSource("animation-source", "/media/sticker.gif", 4500, 5),
+					Geometry: testGeometry(Length{Value: 20, Unit: LengthUnitPercent}, Length{Value: 120, Unit: LengthUnitPixel}),
+					Opacity:  0.8,
+					Loop:     true,
+				},
+			},
+			{
 				ID:    "subtitle-layer",
 				Kind:  LayerKindSubtitle,
 				Range: testRange(0, 9*time.Second),
 				Subtitle: &SubtitleLayer{
-					Region: testGeometry(Length{Value: 80, Unit: LengthUnitPercent}, Length{Value: 20, Unit: LengthUnitPercent}),
+					Region:          testGeometry(Length{Value: 80, Unit: LengthUnitPercent}, Length{Value: 20, Unit: LengthUnitPercent}),
+					Opacity:         &subtitleOpacity,
+					RotationDegrees: -12,
 					Style: SubtitleStyle{
-						FontFamily: "sans-serif",
-						FontSize:   Length{Value: 32, Unit: LengthUnitPixel},
-						Color:      "#FFFFFF",
-						Align:      TextAlignCenter,
+						FontFamily:  "sans-serif",
+						FontSize:    Length{Value: 32, Unit: LengthUnitPixel},
+						Color:       "#FFFFFF",
+						Align:       TextAlignCenter,
+						StrokeColor: "#000000",
+						StrokeWidth: Length{Value: 2, Unit: LengthUnitPixel},
 					},
 					Cues: []SubtitleCue{
 						{ID: "cue-1", Range: testRange(time.Second, 2*time.Second), Text: "first"},

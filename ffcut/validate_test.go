@@ -116,7 +116,7 @@ func TestProjectValidateRejectsInvalidValues(t *testing.T) {
 		{
 			name: "layer payload mismatch",
 			path: "layers[0]",
-			edit: func(project *Project) { project.Layers[0].Subtitle = project.Layers[1].Subtitle },
+			edit: func(project *Project) { project.Layers[0].Subtitle = project.Layers[2].Subtitle },
 		},
 		{
 			name: "percentage out of range",
@@ -124,19 +124,39 @@ func TestProjectValidateRejectsInvalidValues(t *testing.T) {
 			edit: func(project *Project) { project.Layers[0].Image.Geometry.Width.Value = 101 },
 		},
 		{
+			name: "animation layer must loop",
+			path: "layers[1].media.loop",
+			edit: func(project *Project) { project.Layers[1].Media.Loop = false },
+		},
+		{
+			name: "stroke color required",
+			path: "layers[2].subtitle.style.stroke_color",
+			edit: func(project *Project) { project.Layers[2].Subtitle.Style.StrokeColor = "" },
+		},
+		{
+			name: "subtitle opacity out of range",
+			path: "layers[2].subtitle.opacity",
+			edit: func(project *Project) { *project.Layers[2].Subtitle.Opacity = 1.1 },
+		},
+		{
+			name: "subtitle rotation must be finite",
+			path: "layers[2].subtitle.rotation_degrees",
+			edit: func(project *Project) { project.Layers[2].Subtitle.RotationDegrees = math.Inf(1) },
+		},
+		{
 			name: "cue outside layer",
-			path: "layers[1].subtitle.cues[1].range",
-			edit: func(project *Project) { project.Layers[1].Subtitle.Cues[1].Range.Start = duration(8 * time.Second) },
+			path: "layers[2].subtitle.cues[1].range",
+			edit: func(project *Project) { project.Layers[2].Subtitle.Cues[1].Range.Start = duration(8 * time.Second) },
 		},
 		{
 			name: "subtitle requires a font",
-			path: "layers[1].subtitle.style.font_family",
-			edit: func(project *Project) { project.Layers[1].Subtitle.Style.FontFamily = "" },
+			path: "layers[2].subtitle.style.font_family",
+			edit: func(project *Project) { project.Layers[2].Subtitle.Style.FontFamily = "" },
 		},
 		{
 			name: "unsupported subtitle alignment",
-			path: "layers[1].subtitle.style.align",
-			edit: func(project *Project) { project.Layers[1].Subtitle.Style.Align = "justify" },
+			path: "layers[2].subtitle.style.align",
+			edit: func(project *Project) { project.Layers[2].Subtitle.Style.Align = "justify" },
 		},
 		{
 			name: "non finite gain",

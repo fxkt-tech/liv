@@ -32,7 +32,7 @@ Call `ffcut.Marshal`, not `encoding/json.Marshal`, at persistence or process bou
 | `VideoClip` | Local source, source/timeline ranges, rate/loop/freeze behavior, fit mode, original-audio settings |
 | `Transition` | Adjacent clip IDs, absolute range, `cut` or `fade`, audio-crossfade decision |
 | `AudioTrack` | `bgm` or `voice` source/ranges, loop, gain, fade-in and fade-out |
-| `Layer` | Absolute range plus exactly one image or subtitle payload; slice order is render order |
+| `Layer` | Absolute range plus exactly one image, media, or subtitle payload; slice order is render order |
 | `Metadata` | Template fingerprint, actual seed, combination fingerprint, selections and constraint fingerprints |
 
 ### Time
@@ -60,6 +60,14 @@ Call `ffcut.Marshal`, not `encoding/json.Marshal`, at persistence or process bou
 
 `Background` and `Layer` use a discriminator plus typed pointer payloads. Exactly one payload must be non-nil and it must match the discriminator. Do not introduce `map[string]any`, unrestricted `interface{}`, or renderer-specific filter payloads.
 
+`MediaLayer` is the reusable foreground-media payload. It carries a local source, pixel/percent geometry, opacity, rotation, and an explicit media kind:
+
+- `image` is a static image and must not loop.
+- `animation` and `video` must set `loop=true`; each layer range starts the source at frame zero.
+- Layer media audio is never part of the protocol mix. Audio continues to come from `Project.Audio`.
+
+`SubtitleStyle` supports fill/background color, alignment, font size, and optional stroke color/width. `SubtitleLayer` optionally carries opacity (omitted means fully opaque for existing Project v2 payloads) and rotation. Text content remains data, not an executable renderer expression.
+
 ## 4. Validation & Error Matrix
 
 | Condition | Required result |
@@ -86,7 +94,8 @@ Errors must remain usable through `errors.Is`/`errors.As`; callers must not pars
 - Base: a source and timeline range of equal duration at rate 1.
 - Bad: a relative media path such as `media/a.mp4`; resolution belongs in template compilation.
 - Bad: a 4-second source in a 5-second non-looping clip at rate 1 without freeze.
-- Bad: a layer with both image and subtitle payloads, even if its discriminator names one of them.
+- Bad: a layer with both media and subtitle payloads, even if its discriminator names one of them.
+- Bad: an image with `loop=true`, or an animation/video with `loop=false`.
 
 ## 6. Tests Required
 
@@ -94,7 +103,7 @@ Errors must remain usable through `errors.Is`/`errors.As`; callers must not pars
 - Assert an exact minimal Project v2 JSON shape, including integer-microsecond fields.
 - Assert serialization does not mutate the caller's Project.
 - Table-test every validation category and assert both sentinel category and field path.
-- Cover cut/fade adjacency, speed/loop/freeze playback, all background variants, BGM bounds, and subtitle/image layer bounds.
+- Cover cut/fade adjacency, speed/loop/freeze playback, all background variants, BGM bounds, and subtitle/image/media layer bounds.
 - Run `go test -race ./ffcut`, `go vet ./ffcut`, and `staticcheck ./ffcut` for protocol changes.
 - Verify `ffcut` does not import `ffprobe`, `ffmpeg`, or `ffcut/fusion`.
 

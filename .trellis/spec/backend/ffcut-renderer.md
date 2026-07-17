@@ -4,7 +4,7 @@
 
 Use `ffcut/renderer` when an application has already resolved local assets into a valid `ffcut.Project` and needs a real MP4 artifact. The package owns the supported FFmpeg execution subset; application repositories must not rebuild its filter graph or shell command.
 
-The initial executable subset targets deterministic short-form voice-over videos: ordered hard cuts, original clip audio disabled, center-cover/contain/stretch fitting, and one full-timeline voice track.
+The executable subset targets deterministic short-form voice-over videos: ordered hard cuts, original clip audio disabled, center-cover/contain/stretch fitting, one full-timeline voice track, and ordered static/animated/video/text foreground layers.
 
 ## 2. Signatures
 
@@ -37,6 +37,9 @@ var renderer.ErrRenderFailed error
 - Supported transitions: `cut` only.
 - Supported video: at least one clip; `audio.enabled=false`; no loop or final-frame freeze; fit is `cover`, `contain`, or `stretch`.
 - Supported audio: exactly one `AudioTrackKindVoice` spanning the complete timeline from zero, without loop or fades.
+- Supported foreground media: static image, looping animation, and looping video. Every source starts at frame zero when its absolute layer range begins; media source audio is ignored.
+- Supported foreground text: subtitle cues rendered in layer order with pixel/percent geometry, fill/background, alignment, and optional stroke. Cue text must be passed through temporary text files, never interpolated directly into an FFmpeg filter graph.
+- Layer geometry uses the Project canvas coordinate system. Opacity and rotation are applied before overlay, and the layer is enabled only inside its absolute range.
 - Output: H.264 High Profile, `yuv420p`, AAC 48 kHz, MP4 fast-start; CRF defaults to 20 and audio bitrate to 192k.
 - Rendering is silent by default. `WithDebug` writes the quoted command to the supplied writer; it must not enable implicit stdout/stderr logging.
 - Cancellation is controlled exclusively by `context.Context` and returns an error matching `ErrRenderFailed` while preserving `ctx.Err()` in the chain.
@@ -47,7 +50,8 @@ var renderer.ErrRenderFailed error
 |---|---|
 | Invalid Project v2 | Return the original ffcut validation category before running FFmpeg |
 | Empty or relative output path | Error matching `ErrInvalidOutput` |
-| Image/blur background, fade, layer, enabled clip audio, loop/freeze, BGM-only/multiple audio tracks | Error matching `ErrUnsupportedProject` with the field path |
+| Image/blur background, fade transition, enabled clip audio, clip loop/freeze, BGM-only/multiple audio tracks | Error matching `ErrUnsupportedProject` with the field path |
+| Unsupported foreground media kind or malformed media/text payload | Protocol validation error, or `ErrUnsupportedProject` if valid but outside the renderer subset |
 | Voice does not cover the exact video timeline | Error matching `ErrUnsupportedProject` |
 | FFmpeg exits non-zero | Error matching `ErrRenderFailed`, wrapping the execution error and bounded stderr returned by the process |
 | Context cancelled or deadline exceeded | Error matching both `ErrRenderFailed` and the context error |
@@ -57,6 +61,7 @@ var renderer.ErrRenderFailed error
 - Good: two portrait or landscape source clips center-cropped into a 9:16 canvas, hard-cut at the exact boundary, with one narration track.
 - Good: `examples/ffcut/renderer` builds this two-clip voice-over Project from local files, validates it with `ffcut.Marshal`, and renders a real MP4.
 - Good: one clip with `FitModeContain` and a color canvas.
+- Good: static PNG, looping GIF, looping silent video, and stroked text composited in slice order over the voice-over timeline.
 - Base: one rate-1 clip and one voice track with identical two-second ranges.
 - Bad: preserving source audio and mixing narration in the application; clip audio is intentionally unsupported in this subset.
 - Bad: calling `exec.Command("ffmpeg", ...)` in an application repository for a Project that this renderer owns.
@@ -66,6 +71,7 @@ var renderer.ErrRenderFailed error
 
 - Unit-test command construction for one and multiple clips, every supported fit, custom CRF, command failure, invalid output, cancellation, and every unsupported feature.
 - Integration-test with generated colored clips and narration. Assert output dimensions, approximate duration, exactly one video and one audio stream, and frame colors on both sides of the cut.
+- Integration-test generated static image, multi-frame GIF, and video layers. Assert layer order, animation looping, video looping, and safe punctuation in text.
 - Assert original clip audio is absent from the rendered output contract.
 - Run `go test -race ./ffcut ./ffcut/renderer`, `go vet ./ffcut ./ffcut/renderer`, and the renderer integration test on a host with FFmpeg/FFprobe.
 

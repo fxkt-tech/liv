@@ -22,8 +22,8 @@ func TestMarshalRoundTrip(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("round trip mismatch\n got: %#v\nwant: %#v", got, want)
 	}
-	if got.Layers[0].ID != "watermark-layer" || got.Layers[1].ID != "subtitle-layer" {
-		t.Fatalf("layer order changed: %v", []ID{got.Layers[0].ID, got.Layers[1].ID})
+	if got.Layers[0].ID != "watermark-layer" || got.Layers[1].ID != "animation-layer" || got.Layers[2].ID != "subtitle-layer" {
+		t.Fatalf("layer order changed: %v", []ID{got.Layers[0].ID, got.Layers[1].ID, got.Layers[2].ID})
 	}
 }
 
