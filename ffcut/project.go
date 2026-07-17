@@ -91,6 +91,7 @@ const (
 	SelectionKindVideo      SelectionKind = "video"
 	SelectionKindTransition SelectionKind = "transition"
 	SelectionKindBGM        SelectionKind = "bgm"
+	SelectionKindVoice      SelectionKind = "voice"
 )
 
 type Selection struct {

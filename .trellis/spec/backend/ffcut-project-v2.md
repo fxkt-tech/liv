@@ -31,7 +31,7 @@ Call `ffcut.Marshal`, not `encoding/json.Marshal`, at persistence or process bou
 | `Canvas` | Positive width/height, positive rational FPS, one typed background |
 | `VideoClip` | Local source, source/timeline ranges, rate/loop/freeze behavior, fit mode, original-audio settings |
 | `Transition` | Adjacent clip IDs, absolute range, `cut` or `fade`, audio-crossfade decision |
-| `AudioTrack` | BGM source/ranges, loop, gain, fade-in and fade-out |
+| `AudioTrack` | `bgm` or `voice` source/ranges, loop, gain, fade-in and fade-out |
 | `Layer` | Absolute range plus exactly one image or subtitle payload; slice order is render order |
 | `Metadata` | Template fingerprint, actual seed, combination fingerprint, selections and constraint fingerprints |
 
@@ -73,6 +73,8 @@ Call `ffcut.Marshal`, not `encoding/json.Marshal`, at persistence or process bou
 | Layer or BGM extends beyond the video sequence | Invalid Project at its timeline range |
 | Unknown JSON field, malformed JSON, or trailing JSON value | `*ffcut.CodecError` matching `ffcut.ErrInvalidProject` |
 | Multiple independent violations | One `*ffcut.ValidationError` containing all discovered field-path issues |
+
+`AudioTrackKindVoice` and `SelectionKindVoice` are valid protocol values. Like video and BGM selections, a voice selection must carry a non-empty `asset_fingerprint`; the root protocol does not assume which renderer will consume it.
 
 Errors must remain usable through `errors.Is`/`errors.As`; callers must not parse error strings.
 

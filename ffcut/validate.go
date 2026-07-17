@@ -260,7 +260,7 @@ func (v *projectValidator) validateClipAudio(path string, audio ClipAudio) {
 
 func (v *projectValidator) validateAudioTrack(path string, track AudioTrack, projectDuration Duration) {
 	v.addObjectID(path+".id", track.ID)
-	if track.Kind != AudioTrackKindBGM {
+	if track.Kind != AudioTrackKindBGM && track.Kind != AudioTrackKindVoice {
 		v.add(path+".kind", fmt.Sprintf("has unsupported value %q", track.Kind), nil)
 	}
 	v.validateLocalSource(path+".source", track.Source)
@@ -450,7 +450,7 @@ func (v *projectValidator) validateMetadata(path string, metadata Metadata) {
 	for index, selection := range metadata.Selections {
 		selectionPath := fmt.Sprintf("%s.selections[%d]", path, index)
 		switch selection.Kind {
-		case SelectionKindVideo, SelectionKindTransition, SelectionKindBGM:
+		case SelectionKindVideo, SelectionKindTransition, SelectionKindBGM, SelectionKindVoice:
 		default:
 			v.add(selectionPath+".kind", fmt.Sprintf("has unsupported value %q", selection.Kind), nil)
 		}
@@ -464,7 +464,7 @@ func (v *projectValidator) validateMetadata(path string, metadata Metadata) {
 		if strings.TrimSpace(string(selection.OptionID)) == "" {
 			v.add(selectionPath+".option_id", "must not be empty", nil)
 		}
-		if (selection.Kind == SelectionKindVideo || selection.Kind == SelectionKindBGM) && strings.TrimSpace(selection.AssetFingerprint) == "" {
+		if (selection.Kind == SelectionKindVideo || selection.Kind == SelectionKindBGM || selection.Kind == SelectionKindVoice) && strings.TrimSpace(selection.AssetFingerprint) == "" {
 			v.add(selectionPath+".asset_fingerprint", "must not be empty for media selections", nil)
 		}
 	}

@@ -247,6 +247,16 @@ func TestProjectValidateAggregatesIssues(t *testing.T) {
 	}
 }
 
+func TestVoiceAudioTrackValidates(t *testing.T) {
+	project := validProject()
+	project.Audio[0].Kind = AudioTrackKindVoice
+	project.Metadata.Selections[3].Kind = SelectionKindVoice
+
+	if err := project.Validate(); err != nil {
+		t.Fatalf("Validate() error = %v", err)
+	}
+}
+
 func TestCutRequiresExactBoundary(t *testing.T) {
 	project := validProject()
 	project.Video.Clips[1].TimelineRange.Start = duration(5 * time.Second)

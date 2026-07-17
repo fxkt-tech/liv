@@ -19,6 +19,7 @@ there is no HTTP or database application layer.
 | [Logging](./logging-guidelines.md) | Silent library behavior and opt-in command diagnostics | Established |
 | [Quality](./quality-guidelines.md) | Go verification gate, tests, and review rules | Established |
 | [FFcut Project v2](./ffcut-project-v2.md) | Typed timeline protocol and validation boundary | Established |
+| [FFcut Renderer](./ffcut-renderer.md) | Supported executable FFmpeg subset and artifact contract | Established |
 | [FFVMix Template Compiler](./ffvmix-template-compiler.md) | Persistent templates, local asset compilation, and immutable results | Established |
 | [FFVMix Lazy Generator](./ffvmix-generator.md) | Deterministic lazy enumeration, pure constraints, and project construction | Established |
 
@@ -36,6 +37,8 @@ Then read the guides matching the change:
 - Debug/dry-run output or observability: [Logging](./logging-guidelines.md)
 - FFcut wire types, timeline, validation, or JSON:
   [FFcut Project v2](./ffcut-project-v2.md)
+- FFcut rendering or FFmpeg artifact output:
+  [FFcut Renderer](./ffcut-renderer.md)
 - FFVMix template or compilation:
   [FFVMix Template Compiler](./ffvmix-template-compiler.md)
 - FFVMix enumeration, constraints, or project construction:

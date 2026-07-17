@@ -48,6 +48,8 @@ type AudioTrackKind string
 
 const AudioTrackKindBGM AudioTrackKind = "bgm"
 
+const AudioTrackKindVoice AudioTrackKind = "voice"
+
 type AudioTrack struct {
 	ID            ID             `json:"id"`
 	Kind          AudioTrackKind `json:"kind"`
