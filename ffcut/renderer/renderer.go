@@ -17,6 +17,8 @@ const (
 	videoCodec  = "libx264"
 	audioCodec  = "aac"
 	pixelFormat = "yuv420p"
+	voiceGain   = 1.0
+	maxBGMGain  = 1.0
 )
 
 // Render validates project, builds the supported FFmpeg graph, and writes an MP4 file.
@@ -70,6 +72,10 @@ func buildArgs(project *ffcut.Project, outputPath string, config config, textFil
 	if err := validateSupported(project); err != nil {
 		return nil, err
 	}
+	audio, err := resolveAudioTracks(project)
+	if err != nil {
+		return nil, err
+	}
 
 	args := []string{"-v", "error", "-y"}
 	for _, clip := range project.Video.Clips {
@@ -91,12 +97,24 @@ func buildArgs(project *ffcut.Project, outputPath string, config config, textFil
 		nextInput++
 	}
 
-	voice := project.Audio[0]
+	voice := project.Audio[audio.voiceIndex]
+	voiceInput := nextInput
 	args = append(args,
 		"-ss", seconds(voice.SourceRange.Start),
 		"-t", seconds(voice.SourceRange.Duration),
 		"-i", voice.Source.Path,
 	)
+	nextInput++
+	bgmInput := -1
+	if audio.bgmIndex >= 0 {
+		bgm := project.Audio[audio.bgmIndex]
+		bgmInput = nextInput
+		args = append(args,
+			"-ss", seconds(bgm.SourceRange.Start),
+			"-t", seconds(bgm.SourceRange.Duration),
+			"-i", bgm.Source.Path,
+		)
+	}
 
 	graph := make([]string, 0, len(project.Video.Clips)+len(project.Layers)*2+2)
 	videoLabels := make([]string, 0, len(project.Video.Clips))
@@ -131,13 +149,29 @@ func buildArgs(project *ffcut.Project, outputPath string, config config, textFil
 		currentLabel = nextLabel
 	}
 
-	voiceInput := nextInput
+	voiceOutputLabel := "aout"
+	if audio.bgmIndex >= 0 {
+		voiceOutputLabel = "voiceout"
+	}
 	graph = append(graph, fmt.Sprintf(
-		"[%d:a:0]atrim=duration=%s,asetpts=PTS-STARTPTS,volume=%s[aout]",
+		"[%d:a:0]atrim=duration=%s,asetpts=PTS-STARTPTS,volume=%s[%s]",
 		voiceInput,
 		seconds(voice.TimelineRange.Duration),
 		formatFloat(voice.Gain),
+		voiceOutputLabel,
 	))
+	if audio.bgmIndex >= 0 {
+		bgm := project.Audio[audio.bgmIndex]
+		graph = append(graph,
+			fmt.Sprintf(
+				"[%d:a:0]atrim=duration=%s,asetpts=PTS-STARTPTS,volume=%s[bgmout]",
+				bgmInput,
+				seconds(bgm.TimelineRange.Duration),
+				formatFloat(bgm.Gain),
+			),
+			"[voiceout][bgmout]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]",
+		)
+	}
 
 	frameRate := fmt.Sprintf("%d/%d", project.Canvas.FrameRate.Numerator, project.Canvas.FrameRate.Denominator)
 	projectDuration, _ := project.Video.Clips[len(project.Video.Clips)-1].TimelineRange.End()
@@ -184,15 +218,51 @@ func validateSupported(project *ffcut.Project) error {
 			return unsupported(fmt.Sprintf("video.clips[%d].playback", index), "loop or freeze")
 		}
 	}
-	if len(project.Audio) != 1 || project.Audio[0].Kind != ffcut.AudioTrackKindVoice {
-		return unsupported("audio", "exactly one voice track is required")
+	audio, err := resolveAudioTracks(project)
+	if err != nil {
+		return err
 	}
-	voice := project.Audio[0]
 	projectDuration, _ := project.Video.Clips[len(project.Video.Clips)-1].TimelineRange.End()
-	if voice.TimelineRange.Start != 0 || voice.TimelineRange.Duration != projectDuration || voice.Loop || voice.FadeIn != 0 || voice.FadeOut != 0 {
-		return unsupported("audio[0]", "voice must cover the complete timeline without loop or fades")
+	voice := project.Audio[audio.voiceIndex]
+	if voice.SourceRange.Start != 0 || voice.TimelineRange.Start != 0 || voice.TimelineRange.Duration != projectDuration ||
+		voice.Gain != voiceGain || voice.Loop || voice.FadeIn != 0 || voice.FadeOut != 0 {
+		return unsupported(fmt.Sprintf("audio[%d]", audio.voiceIndex), "voice must start from zero, cover the complete timeline at gain 1, and have no loop or fades")
+	}
+	if audio.bgmIndex >= 0 {
+		bgm := project.Audio[audio.bgmIndex]
+		if bgm.SourceRange.Start != 0 || bgm.TimelineRange.Start != 0 || bgm.TimelineRange.Duration != projectDuration ||
+			bgm.Gain > maxBGMGain || bgm.Loop || bgm.FadeIn != 0 || bgm.FadeOut != 0 {
+			return unsupported(fmt.Sprintf("audio[%d]", audio.bgmIndex), "BGM must start from zero, cover the complete timeline at gain 0..1, and have no loop or fades")
+		}
 	}
 	return nil
+}
+
+type audioTrackIndexes struct {
+	voiceIndex int
+	bgmIndex   int
+}
+
+func resolveAudioTracks(project *ffcut.Project) (audioTrackIndexes, error) {
+	indexes := audioTrackIndexes{voiceIndex: -1, bgmIndex: -1}
+	for index, track := range project.Audio {
+		switch track.Kind {
+		case ffcut.AudioTrackKindVoice:
+			if indexes.voiceIndex >= 0 {
+				return audioTrackIndexes{}, unsupported("audio", "exactly one voice track is required")
+			}
+			indexes.voiceIndex = index
+		case ffcut.AudioTrackKindBGM:
+			if indexes.bgmIndex >= 0 {
+				return audioTrackIndexes{}, unsupported("audio", "at most one BGM track is supported")
+			}
+			indexes.bgmIndex = index
+		}
+	}
+	if indexes.voiceIndex < 0 || len(project.Audio) > 2 {
+		return audioTrackIndexes{}, unsupported("audio", "exactly one voice track and at most one BGM track are required")
+	}
+	return indexes, nil
 }
 
 func visualLayerSource(layer ffcut.Layer) (ffcut.LocalSource, ffcut.MediaKind, bool) {

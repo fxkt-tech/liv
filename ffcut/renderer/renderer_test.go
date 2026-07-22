@@ -59,6 +59,45 @@ func TestRenderBuildsVMixCommand(t *testing.T) {
 	}
 }
 
+func TestRenderBuildsVoiceAndBGMCommandIndependentOfTrackOrder(t *testing.T) {
+	project := vmixProject(t)
+	voice := project.Audio[0]
+	bgm := ffcut.AudioTrack{
+		ID:            "bgm-track",
+		Kind:          ffcut.AudioTrackKindBGM,
+		Source:        rendererSource(t, "bgm", filepath.Join(t.TempDir(), "bgm.m4a")),
+		SourceRange:   rendererRange(0, 3*time.Second),
+		TimelineRange: rendererRange(0, 2*time.Second),
+		Gain:          0.15,
+	}
+	// BGM 故意放在 voice 前面，renderer 必须按 kind 解析而不是依赖数组顺序。
+	project.Audio = []ffcut.AudioTrack{bgm, voice}
+	project.Metadata.Selections = append(project.Metadata.Selections, ffcut.Selection{
+		Kind: ffcut.SelectionKindBGM, DimensionID: "bgm", OptionID: "bgm", AssetFingerprint: "bgm",
+	})
+	runner := &recordingRunner{}
+
+	if err := Render(context.Background(), project, filepath.Join(t.TempDir(), "final.mp4"), withRunner(runner)); err != nil {
+		t.Fatalf("Render() error = %v", err)
+	}
+
+	command := strings.Join(runner.args, " ")
+	for _, want := range []string{
+		"-i " + voice.Source.Path,
+		"-i " + bgm.Source.Path,
+		"[2:a:0]atrim=duration=2.000000,asetpts=PTS-STARTPTS,volume=1.000000[voiceout]",
+		"[3:a:0]atrim=duration=2.000000,asetpts=PTS-STARTPTS,volume=0.150000[bgmout]",
+		"[voiceout][bgmout]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]",
+	} {
+		if !strings.Contains(command, want) {
+			t.Errorf("command = %q, want fragment %q", command, want)
+		}
+	}
+	if strings.Index(command, "-i "+voice.Source.Path) > strings.Index(command, "-i "+bgm.Source.Path) {
+		t.Fatalf("command = %q, want semantic voice input before BGM input", command)
+	}
+}
+
 func TestRenderBuildsOrderedLayerGraph(t *testing.T) {
 	project := vmixProject(t)
 	directory := t.TempDir()
@@ -155,6 +194,92 @@ func TestRenderRejectsUnsupportedFeatures(t *testing.T) {
 			path: "audio",
 			edit: func(project *ffcut.Project) {
 				project.Audio[0].Kind = ffcut.AudioTrackKindBGM
+			},
+		},
+		{
+			name: "multiple voice tracks",
+			path: "audio",
+			edit: func(project *ffcut.Project) {
+				duplicate := project.Audio[0]
+				duplicate.ID = "voice-track-2"
+				duplicate.Source.ID = "voice-source-2"
+				project.Audio = append(project.Audio, duplicate)
+			},
+		},
+		{
+			name: "voice starts after source zero",
+			path: "audio[0]",
+			edit: func(project *ffcut.Project) {
+				project.Audio[0].SourceRange = rendererRange(time.Millisecond, 2*time.Second)
+			},
+		},
+		{
+			name: "voice gain is not one",
+			path: "audio[0]",
+			edit: func(project *ffcut.Project) {
+				project.Audio[0].Gain = 0.9
+			},
+		},
+		{
+			name: "multiple BGM tracks",
+			path: "audio",
+			edit: func(project *ffcut.Project) {
+				first := project.Audio[0]
+				first.ID = "bgm-track-1"
+				first.Kind = ffcut.AudioTrackKindBGM
+				first.Source.ID = "bgm-source-1"
+				second := first
+				second.ID = "bgm-track-2"
+				second.Source.ID = "bgm-source-2"
+				project.Audio = append(project.Audio, first, second)
+			},
+		},
+		{
+			name: "BGM starts after source zero",
+			path: "audio[1]",
+			edit: func(project *ffcut.Project) {
+				bgm := project.Audio[0]
+				bgm.ID = "bgm-track"
+				bgm.Kind = ffcut.AudioTrackKindBGM
+				bgm.Source.ID = "bgm-source"
+				bgm.SourceRange = rendererRange(time.Millisecond, 2*time.Second)
+				project.Audio = append(project.Audio, bgm)
+			},
+		},
+		{
+			name: "BGM gain exceeds one",
+			path: "audio[1]",
+			edit: func(project *ffcut.Project) {
+				bgm := project.Audio[0]
+				bgm.ID = "bgm-track"
+				bgm.Kind = ffcut.AudioTrackKindBGM
+				bgm.Source.ID = "bgm-source"
+				bgm.Gain = 1.01
+				project.Audio = append(project.Audio, bgm)
+			},
+		},
+		{
+			name: "BGM does not cover timeline",
+			path: "audio[1]",
+			edit: func(project *ffcut.Project) {
+				bgm := project.Audio[0]
+				bgm.ID = "bgm-track"
+				bgm.Kind = ffcut.AudioTrackKindBGM
+				bgm.Source.ID = "bgm-source"
+				bgm.TimelineRange.Duration = rendererRange(0, time.Second).Duration
+				project.Audio = append(project.Audio, bgm)
+			},
+		},
+		{
+			name: "looping BGM",
+			path: "audio[1]",
+			edit: func(project *ffcut.Project) {
+				bgm := project.Audio[0]
+				bgm.ID = "bgm-track"
+				bgm.Kind = ffcut.AudioTrackKindBGM
+				bgm.Source.ID = "bgm-source"
+				bgm.Loop = true
+				project.Audio = append(project.Audio, bgm)
 			},
 		},
 	}

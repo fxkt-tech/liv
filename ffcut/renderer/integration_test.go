@@ -28,6 +28,7 @@ func TestRenderIntegration(t *testing.T) {
 	firstPath := filepath.Join(directory, "red.mp4")
 	secondPath := filepath.Join(directory, "blue.mp4")
 	voicePath := filepath.Join(directory, "voice.wav")
+	bgmPath := filepath.Join(directory, "bgm.m4a")
 	createVideoFixture(t, ffmpegBin, firstPath, "red", 440)
 	createVideoFixture(t, ffmpegBin, secondPath, "blue", 550)
 	runFixtureCommand(t, ffmpegBin,
@@ -35,8 +36,26 @@ func TestRenderIntegration(t *testing.T) {
 		"-f", "lavfi", "-i", "sine=frequency=1000:duration=0.8",
 		"-c:a", "pcm_s16le", voicePath,
 	)
+	runFixtureCommand(t, ffmpegBin,
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "sine=frequency=300:duration=1.0",
+		"-c:a", "aac", bgmPath,
+	)
 
 	project := integrationProject(t, firstPath, secondPath, voicePath)
+	project.Audio = append([]ffcut.AudioTrack{
+		{
+			ID:            "bgm",
+			Kind:          ffcut.AudioTrackKindBGM,
+			Source:        sourceFromFile(t, "bgm-source", bgmPath),
+			SourceRange:   rendererRange(0, time.Second),
+			TimelineRange: rendererRange(0, 800*time.Millisecond),
+			Gain:          0.15,
+		},
+	}, project.Audio...)
+	project.Metadata.Selections = append(project.Metadata.Selections, ffcut.Selection{
+		Kind: ffcut.SelectionKindBGM, DimensionID: "bgm", OptionID: "bgm", AssetFingerprint: "bgm",
+	})
 	outputPath := filepath.Join(directory, "final.mp4")
 	if err := Render(context.Background(), project, outputPath, WithFFmpegBin(ffmpegBin)); err != nil {
 		t.Fatalf("Render() error = %v", err)
@@ -91,6 +110,54 @@ func TestRenderIntegration(t *testing.T) {
 
 	assertFrameColor(t, ffmpegBin, outputPath, 0.1, 'r')
 	assertFrameColor(t, ffmpegBin, outputPath, 0.6, 'b')
+}
+
+// TestRenderMP3VoiceIntegration verifies that an MP3 source is accepted by the real renderer path.
+func TestRenderMP3VoiceIntegration(t *testing.T) {
+	ffmpegBin, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		t.Skip("ffmpeg is not installed")
+	}
+	ffprobeBin, err := exec.LookPath("ffprobe")
+	if err != nil {
+		t.Skip("ffprobe is not installed")
+	}
+
+	directory := t.TempDir()
+	firstPath := filepath.Join(directory, "red.mp4")
+	secondPath := filepath.Join(directory, "blue.mp4")
+	voicePath := filepath.Join(directory, "voice.mp3")
+	createVideoFixture(t, ffmpegBin, firstPath, "red", 440)
+	createVideoFixture(t, ffmpegBin, secondPath, "blue", 550)
+	runFixtureCommand(t, ffmpegBin,
+		"-v", "error", "-y",
+		"-f", "lavfi", "-i", "sine=frequency=1000:duration=0.8",
+		"-c:a", "libmp3lame", voicePath,
+	)
+
+	outputPath := filepath.Join(directory, "mp3-voice.mp4")
+	if err := Render(
+		context.Background(),
+		integrationProject(t, firstPath, secondPath, voicePath),
+		outputPath,
+		WithFFmpegBin(ffmpegBin),
+	); err != nil {
+		t.Fatalf("Render() error = %v", err)
+	}
+	probeOutput, err := exec.Command(
+		ffprobeBin,
+		"-v", "error",
+		"-select_streams", "a:0",
+		"-show_entries", "stream=codec_type",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		outputPath,
+	).Output()
+	if err != nil {
+		t.Fatalf("ffprobe error = %v", err)
+	}
+	if string(probeOutput) != "audio\n" {
+		t.Fatalf("audio stream = %q, want audio", probeOutput)
+	}
 }
 
 func TestRenderLayersIntegration(t *testing.T) {
