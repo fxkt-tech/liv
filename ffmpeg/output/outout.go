@@ -29,6 +29,7 @@ type Output struct {
 	file                  string
 	var_stream_map        string
 	vsync                 string
+	fpsMode               string
 	g                     int32 // gop
 	pass                  int32
 	passlogfile           string
@@ -129,6 +130,9 @@ func (o *Output) Params() (params []string) {
 	}
 	if o.vsync != "" {
 		params = append(params, "-vsync", o.vsync)
+	}
+	if o.fpsMode != "" {
+		params = append(params, "-fps_mode", o.fpsMode)
 	}
 	if o.f == "hls" {
 		if o.hls_segment_type != "" {

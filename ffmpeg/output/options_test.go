@@ -26,3 +26,16 @@ func hasAdjacentParams(params []string, key string, value string) bool {
 	}
 	return false
 }
+
+func TestFpsMode(t *testing.T) {
+	got := New(FpsMode("vfr")).Params()
+
+	if !hasAdjacentParams(got, "-fps_mode", "vfr") {
+		t.Fatalf("FpsMode() params = %v, want -fps_mode vfr", got)
+	}
+	for _, p := range got {
+		if p == "-vsync" {
+			t.Fatalf("FpsMode() params = %v, should not contain -vsync", got)
+		}
+	}
+}

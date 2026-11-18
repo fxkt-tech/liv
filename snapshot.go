@@ -59,14 +59,14 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 		selectFilter := filter.Select("'eq(pict_type,I)'")
 		filters = append(filters, selectFilter)
 		lastFilter = selectFilter
-		outputOptions = append(outputOptions, output.VSync("vfr"))
+		outputOptions = append(outputOptions, output.FpsMode("vfr"))
 	case 1: // 等间隔截图
 		if params.Num != 1 {
 			if params.IntervalFrames > 0 {
 				selectFilter := filter.Select(fmt.Sprintf("'not(mod(n,%d))'", params.IntervalFrames))
 				filters = append(filters, selectFilter)
 				lastFilter = selectFilter
-				outputOptions = append(outputOptions, output.VSync("vfr"))
+				outputOptions = append(outputOptions, output.FpsMode("vfr"))
 			} else {
 				fpsFilter := filter.FPS(math.Fraction(1, params.Interval))
 				filters = append(filters, fpsFilter)
@@ -82,7 +82,7 @@ func (ss *Snapshot) Simple(ctx context.Context, params *SnapshotParams) error {
 			selectFilter := filter.Select(selectExpr)
 			filters = append(filters, selectFilter)
 			lastFilter = selectFilter
-			outputOptions = append(outputOptions, output.VSync("vfr"))
+			outputOptions = append(outputOptions, output.FpsMode("vfr"))
 		}
 	}
 	if params.Width > 0 || params.Height > 0 {

@@ -148,9 +148,17 @@ func VarStreamMap(s string) Option {
 	}
 }
 
+// Deprecated: FFmpeg 8 起已移除 -vsync，请使用 FpsMode。
 func VSync(vsync string) Option {
 	return func(o *Output) {
 		o.vsync = vsync
+	}
+}
+
+// FpsMode 设置 -fps_mode，FFmpeg 5.1 起可用，用于替代 -vsync。
+func FpsMode(mode string) Option {
+	return func(o *Output) {
+		o.fpsMode = mode
 	}
 }
 
