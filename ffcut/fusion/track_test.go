@@ -2,6 +2,7 @@ package fusion_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/fxkt-tech/liv/ffcut/fusion"
@@ -74,6 +75,7 @@ func TestExport(t *testing.T) {
 }
 
 func TestExec(t *testing.T) {
+	requireFusionFixture(t, "in.mp4")
 	err := fusion.New(
 		// fusion.WithStageSize(540, 960),
 		fusion.WithStageSize(1920, 1080),
@@ -119,6 +121,7 @@ func TestExec(t *testing.T) {
 
 func TestExec2(t *testing.T) {
 	filename := "/Users/justyer/Desktop/in.mp4"
+	requireFusionFixture(t, filename)
 	err := fusion.New(
 		// fusion.WithStageSize(540, 960),
 		fusion.WithStageSize(1080, 1920),
@@ -173,6 +176,7 @@ func F32ToMill(f float32) int32 {
 }
 
 func TestSpeed(t *testing.T) {
+	requireFusionFixture(t, "in.mp4")
 	var (
 		duration = float32(10)
 
@@ -235,6 +239,8 @@ func TestSpeed(t *testing.T) {
 }
 
 func TestVmix(t *testing.T) {
+	requireFusionFixture(t, "/Users/justyer/Desktop/fade1.mp4")
+	requireFusionFixture(t, "/Users/justyer/Desktop/fade2.mp4")
 	err := fusion.New(
 		fusion.WithStageSize(853, 480),
 	).
@@ -271,4 +277,11 @@ func TestVmix(t *testing.T) {
 
 	// fmt.Println(trackData)
 	// t.Log(json.Pretty([]byte(trackData)))
+}
+
+func requireFusionFixture(t *testing.T, path string) {
+	t.Helper()
+	if _, err := os.Stat(path); err != nil {
+		t.Skipf("manual fusion fixture %q is unavailable: %v", path, err)
+	}
 }
